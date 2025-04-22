@@ -1,0 +1,85 @@
+:root {
+  /* Colors */
+  --color-primary: #01161b;
+  --color-secondary: #ffffff;
+  --color-text: #616161;
+  --color-accent: #f0bc3c;
+  --color-blue-light: #0f9cb9;
+  --color-blue: #1f58ae;
+  --color-blue-dark: #00305a;
+  --color-gray-light: #f5f5f5;
+  --color-gray: #b9b9b9;
+  --color-border: #dfe3e8;
+
+  /* Status Colors */
+  --color-success: #4caf50;
+  --color-warning: #ffc107;
+  --color-error: #f44336;
+  --color-info: #2196f3;
+
+  /* Score Colors */
+  --color-score-high: #4caf50;
+  --color-score-medium: #ffc107;
+  --color-score-low: #f44336;
+
+  /* Typography */
+  --font-primary: 'Libre Franklin', sans-serif;
+  --font-secondary: 'Hind Madurai', sans-serif;
+  --font-text: 'Oxygen', sans-serif;
+  --font-mono: 'Courier New', monospace;
+
+  /* Font Sizes */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  /* Border Radius */
+  --border-radius-sm: 2px;
+  --border-radius: 4px;
+  --border-radius-lg: 8px;
+  --border-radius-xl: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  /* Transitions */
+  --transition-speed: 0.3s;
+  --transition-timing: ease-in-out;
+
+  /* Z-index */
+  --z-negative: -1;
+  --z-elevate: 1;
+  --z-sticky: 100;
+  --z-modal: 200;
+  --z-popup: 300;
+  --z-toast: 400;
+}
+
+/* Mobile-first responsive breakpoints */
+@media (min-width: 768px) {
+  :root {
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --spacing-lg: 2.5rem;
+    --spacing-xl: 4rem;
+  }
+}

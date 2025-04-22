@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animal Tracker Testing</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/variables.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <!-- Vue.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.js"></script>
+
+    <!-- For PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <div v-if="!testLoaded" class="welcome-screen">
+        <h1>Animal Tracker Testing</h1>
+        <div class="actions">
+          <button @click="startNewTest">Start New Test</button>
+          <button @click="importTest">Import Test</button>
+        </div>
+      </div>
+
+      <test-form
+        v-else
+        :test-data="testData"
+        @save="saveTest"
+        @export="exportTest"
+      ></test-form>
+    </div>
+
+    <!-- Application Scripts -->
+    <script src="js/utils/storage.js" type="module"></script>
+    <script src="js/utils/export.js" type="module"></script>
+    <script src="js/utils/pdf.js" type="module"></script>
+    <script src="js/components/FormInputs.js" type="module"></script>
+    <script src="js/components/TestSection.js" type="module"></script>
+    <script src="js/components/TestForm.js" type="module"></script>
+    <script src="js/main.js" type="module"></script>
+  </body>
+</html>

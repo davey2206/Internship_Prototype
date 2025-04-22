@@ -1,0 +1,315 @@
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-text);
+  color: var(--color-text);
+  line-height: 1.5;
+  background-color: var(--color-gray-light);
+}
+
+/* Test Form Container */
+.test-form {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: var(--spacing-md);
+  background-color: var(--color-secondary);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+/* Form Header */
+.form-header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.form-header h1 {
+  color: var(--color-primary);
+  font-family: var(--font-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.tester-info {
+  display: grid;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--color-gray-light);
+  border-radius: var(--border-radius);
+}
+
+/* Form Groups */
+.form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-family: var(--font-text);
+  transition: border-color var(--transition-speed) var(--transition-timing);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--color-blue);
+}
+
+/* Progress Bar */
+.progress-bar {
+  position: relative;
+  height: 24px;
+  background-color: var(--color-gray-light);
+  border-radius: var(--border-radius);
+  margin: var(--spacing-lg) 0;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: var(--color-blue);
+  transition: width var(--transition-speed) var(--transition-timing);
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+/* Test Sections */
+.test-section {
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background-color: var(--color-gray-light);
+  cursor: pointer;
+}
+
+.section-title {
+  flex: 1;
+}
+
+.section-title h2 {
+  color: var(--color-primary);
+  font-family: var(--font-primary);
+  margin: 0;
+}
+
+.section-progress {
+  font-size: var(--text-sm);
+  color: var(--color-blue);
+  margin-left: var(--spacing-md);
+}
+
+/* Test Items */
+.test-item {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.test-item:last-child {
+  border-bottom: none;
+}
+
+.test-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.test-header h4 {
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.test-description {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+/* Score Input */
+.score-input {
+  margin-bottom: var(--spacing-md);
+}
+
+.score-select select {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.score-high {
+  border-color: var(--color-score-high) !important;
+  color: var(--color-score-high);
+}
+
+.score-medium {
+  border-color: var(--color-score-medium) !important;
+  color: var(--color-score-medium);
+}
+
+.score-low {
+  border-color: var(--color-score-low) !important;
+  color: var(--color-score-low);
+}
+
+/* Notes Field */
+.notes-field {
+  margin-top: var(--spacing-md);
+}
+
+.notes-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  resize: vertical;
+}
+
+.notes-footer {
+  margin-top: var(--spacing-xs);
+  font-size: var(--text-xs);
+  color: var(--color-gray);
+}
+
+/* Action Buttons */
+.form-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+}
+
+.btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition-speed) var(--transition-timing);
+}
+
+.btn-save {
+  background-color: var(--color-blue);
+  color: var(--color-secondary);
+}
+
+.btn-export {
+  background-color: var(--color-accent);
+  color: var(--color-primary);
+}
+
+/* Auto-save Indicator */
+.save-indicator {
+  position: fixed;
+  bottom: var(--spacing-md);
+  right: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-secondary);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  font-size: var(--text-sm);
+  opacity: 0;
+  transition: opacity var(--transition-speed) var(--transition-timing);
+}
+
+.save-indicator.visible {
+  opacity: 1;
+}
+
+/* Last Saved Timestamp */
+.last-saved {
+  text-align: right;
+  font-size: var(--text-sm);
+  color: var(--color-gray);
+  margin-top: var(--spacing-md);
+}
+
+.progress-overview {
+  margin: 2rem 0;
+  padding: var(--spacing-lg);
+  background-color: var(--color-secondary);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+.progress-overview h2 {
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.progress-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background-color: var(--color-gray-light);
+  border-radius: var(--border-radius);
+}
+
+.stat-label {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.stat-value {
+  color: var(--color-blue);
+  font-weight: 600;
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+  }
+
+  .test-input {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 767px) {
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
