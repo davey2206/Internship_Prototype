@@ -1,3 +1,8 @@
+<?php
+$plugin_data = get_file_data(__FILE__, ['Version' => 'Version'], false);
+$version = $plugin_data['Version'];
+?>
+
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -20,7 +25,7 @@
 </body>
 
 <script type="module">
-    import animalTrackerComponent from '<?php echo plugin_dir_url(__FILE__) . 'components/animal_tracker.js'; ?>';
+    import animalTrackerComponent from '<?php echo plugin_dir_url(__FILE__) . 'components/animal_tracker.js?v=' . $version; ?>';
 
     const app = Vue.createApp({
         components: {

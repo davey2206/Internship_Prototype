@@ -38,7 +38,7 @@ export default {
   template: `
     <div 
       class="mask-container"
-      :class="{ 'visible': visible, 'fade-out': fadeOut }"
+      :class="{ 'visible': visible, 'fade-out': fadeOut, 'transitioning': isStepTransitioning }"
       :style="maskStyle"
     >
       <!-- SVG mask for cutout -->
@@ -66,6 +66,7 @@ export default {
           :fill="determineFill"
           mask="url(#cutout-mask)"
           class="mask-overlay"
+          :class="{ 'fade-out': isStepTransitioning }"
         />
       </svg>
 
@@ -74,7 +75,7 @@ export default {
         v-if="targetElement && !isStepTransitioning && !isPositioning"
         class="clickthrough-area"
         :style="clickthroughStyle"
-        :class="{ 'visible': !isStepTransitioning && !isPositioning }"
+        :class="{ 'visible': !isStepTransitioning && !isPositioning, 'fade-out': isStepTransitioning }"
         @click="handleTargetClick"
       ></div>
     </div>
@@ -128,6 +129,8 @@ export default {
     maskStyle() {
       return {
         pointerEvents: this.shouldShowMask ? 'auto' : 'none',
+        transition: 'opacity 1s ease',
+        opacity: this.isStepTransitioning ? 0 : 1,
       };
     },
   },
@@ -569,6 +572,9 @@ export default {
       }
 
       console.log('Target element:', target);
+      
+      // Immediately set isStepTransitioning to hide mask
+      this.$emit('target-clicked');
 
       // Handle marker clicks
       const markerElement = target.closest('[data-marker-id]');
@@ -698,7 +704,31 @@ export default {
         // Immediately hide the mask and clickthrough area
         this.maskRect = { x: 0, y: 0, width: 0, height: 0 };
         console.log('isStepTransitioning() reset mask to 0,0,0,0');
+        
+        // Add CSS class for transition
+        document.querySelectorAll('.mask-overlay, .clickthrough-area').forEach(el => {
+          if (el) el.classList.add('fade-out');
+        });
+        
+        // After transition completes, optionally fully hide elements
+        setTimeout(() => {
+          if (this.isStepTransitioning) {
+            document.querySelectorAll('.mask-container').forEach(el => {
+              if (el) el.style.display = 'none';
+            });
+          }
+        }, 1000); // Match CSS transition duration
       } else {
+        // Reset display if needed
+        document.querySelectorAll('.mask-container').forEach(el => {
+          if (el) el.style.display = '';
+        });
+        
+        // Remove transition classes
+        document.querySelectorAll('.mask-overlay, .clickthrough-area').forEach(el => {
+          if (el) el.classList.remove('fade-out');
+        });
+        
         this.updateMask();
       }
     },

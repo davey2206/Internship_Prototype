@@ -1,20 +1,6 @@
 <?php
 abstract class Include_php_file_type
 {
-    /* Popup types */ 
-    const popup_certificate = 1;
-    const popup_custom_media_change = 2;
-    const popup_custom_media_change_partners = 3;
-    const popup_horoscope_choice = 4;
-    const popup_custom_media = 5;
-    const popup_custom_media_partners = 6;
-    const popup_dashboard = 7;
-    const popup_green_phenix = 8;
-    const popup_manage_aio_kukudushi = 9;
-    const popup_lions_dive_beach_resort_cam = 10;
-    const popup_scan_tutorial = 11;
-    const popup_caption_window = 12;
-
     /* Object types */ 
 
     const obj_type_animal = 101;
@@ -81,7 +67,6 @@ abstract class Include_php_file_type
 
     /* Miscelaneous types */
 
-    const misc_popup_interface = 901;
     const misc_payment_functions = 902;
 
 }

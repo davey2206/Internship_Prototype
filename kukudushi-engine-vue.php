@@ -3,7 +3,7 @@
  * Plugin Name:       [Kukudushi] Engine Vue
  * Plugin URI:        https://kukudushi.com
  * Description:       Complete environment for handling and managing NFC functionalities
- * Version:           1.0
+ * Version:           1.1
  * Requires at least: 5.2
  * Requires PHP:      7.2
  * Author:            Nick Gruijters
@@ -19,23 +19,50 @@ require_once plugin_dir_path(__FILE__) . 'url_handler.php';
 // Include the NFC Registration functionality
 require_once plugin_dir_path(__FILE__) . 'kukudushi-nfc-registration.php';
 
+// Get plugin version
+$plugin_data = get_file_data(__FILE__, ['Version' => 'Version'], false);
+define('KUKUDUSHI_ENGINE_VERSION', $plugin_data['Version']);
+
 function enqueue_kukudushi_vue_widget() {
     // Common scripts needed for both scenarios
-    wp_enqueue_script('lodash', 'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js', array(), '4.17.21', false);
+    wp_enqueue_script(
+        'lodash',
+        'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js',
+        array(),
+        '4.17.21',
+        false
+    );
     wp_script_add_data('lodash', 'integrity', 'sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ==');
     wp_script_add_data('lodash', 'crossorigin', 'anonymous');
     wp_script_add_data('lodash', 'referrerpolicy', 'no-referrer');
     
     // Enqueue Vue.js script
-    wp_enqueue_script('vue-js', 'https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.js', array(), null, true);
+    wp_enqueue_script(
+        'vue-js',
+        'https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.js',
+        array(),
+        null,
+        true
+    );
 
     // Add manager components and styles for logged-in managers
     if (is_user_logged_in() && current_user_can('kukudushi_manager')) {
-        wp_enqueue_style('manager-style', plugin_dir_url(__FILE__) . 'css/manager.css');
-        
+        wp_enqueue_style(
+            'manager-style',
+            plugin_dir_url(__FILE__) . 'css/manager.css',
+            array(),
+            KUKUDUSHI_ENGINE_VERSION
+        );
+
         // Enqueue the initialization script which will import other components
-        wp_enqueue_script('manager-init', plugin_dir_url(__FILE__) . 'components/manager-init.js', array('vue-js'), null, true);
-        
+        wp_enqueue_script(
+            'manager-init',
+            plugin_dir_url(__FILE__) . 'components/manager-init.js',
+            array('vue-js'),
+            KUKUDUSHI_ENGINE_VERSION,
+            true
+        );
+
         // Pass necessary data to JavaScript
         wp_localize_script('manager-init', 'managerData', array(
             'plugin_url' => plugin_dir_url(__FILE__),
@@ -45,26 +72,48 @@ function enqueue_kukudushi_vue_widget() {
         ));
     }
 
-    //if (is_front_page() || is_page_template('animal_tracker_3d.php')) {
     if (is_page_template('animal_tracker_3d.php') || 
         ((isset($_GET['uid']) || isset($_GET['id'])) && strpos($_SERVER['REQUEST_URI'], 'animal-tracker-3d') !== false)) {
+        
         // Enqueue Cesium.js and CSS
-        wp_enqueue_script('cesium-js', plugin_dir_url(__FILE__) . 'js/Cesium/Cesium.js', array(), null, true);
-        wp_enqueue_style('cesium-css', plugin_dir_url(__FILE__) . 'js/Cesium/Widgets/widgets.css');
+        wp_enqueue_script(
+            'cesium-js',
+            plugin_dir_url(__FILE__) . 'js/Cesium/Cesium.js',
+            array(),
+            KUKUDUSHI_ENGINE_VERSION,
+            true
+        );
+        wp_enqueue_style(
+            'cesium-css',
+            plugin_dir_url(__FILE__) . 'js/Cesium/Widgets/widgets.css',
+            array(),
+            KUKUDUSHI_ENGINE_VERSION
+        );
 
         // Enqueue custom CSS files
-        wp_enqueue_style('notification-css', plugin_dir_url(__FILE__) . 'css/notification-manager.css');
-        wp_enqueue_style('tutorial-css', plugin_dir_url(__FILE__) . 'css/tutorial-manager.css');
-        wp_enqueue_style('animal-tracker-css', plugin_dir_url(__FILE__) . 'css/animal-tracker.css');
-        wp_enqueue_style('user-menu-css', plugin_dir_url(__FILE__) . 'css/user-menu.css');
-        wp_enqueue_style('my-animals-css', plugin_dir_url(__FILE__) . 'css/my-animals.css');
-        wp_enqueue_style('cesium-custom-infobox', plugin_dir_url(__FILE__) . 'css/cesium-custom-infobox.css', array('cesium-css'));
+        $styles = array(
+            'notification-css' => 'css/notification-manager.css',
+            'tutorial-css' => 'css/tutorial-manager.css',
+            'animal-tracker-css' => 'css/animal-tracker.css',
+            'user-menu-css' => 'css/user-menu.css',
+            'my-animals-css' => 'css/my-animals.css',
+            'cesium-custom-infobox' => 'css/cesium-custom-infobox.css'
+        );
+        foreach ($styles as $handle => $path) {
+            wp_enqueue_style($handle, plugin_dir_url(__FILE__) . $path, array(), KUKUDUSHI_ENGINE_VERSION);
+        }
 
         // Enqueue animal tracker component
-        wp_enqueue_script('animal-tracker-3d', plugin_dir_url(__FILE__) . 'components/animal_tracker.js', array('vue-js', 'cesium-js', 'lodash'), null, true);
-        
+        wp_enqueue_script(
+            'animal-tracker-3d',
+            plugin_dir_url(__FILE__) . 'components/animal_tracker.js',
+            array('vue-js', 'cesium-js', 'lodash'),
+            KUKUDUSHI_ENGINE_VERSION,
+            true
+        );
+
         $cesiumAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiMzliYjI0Mi0zNWQ5LTRjOGYtODc5NS0yMDU4MzMwNTU2MDUiLCJpZCI6MjMyMjgyLCJpYXQiOjE3MjI1OTQwMDV9.2C9FgiQf4FuSDgoMN1_92A0T2tD2Gtwfr2vpVKBHvKM';
-        
+
         wp_localize_script('animal-tracker-3d', 'kukudushiData', array(
             'plugin_url' => plugin_dir_url(__FILE__),
             'cesiumAccessToken' => $cesiumAccessToken
@@ -133,10 +182,11 @@ function preload_kukudushi_assets()
     if (is_front_page() || is_page_template('animal_tracker_3d.php') || 
         ((isset($_GET['uid']) || isset($_GET['id'])) && strpos($_SERVER['REQUEST_URI'], 'animal-tracker-3d') !== false)) 
     {
-        echo '<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.js">';
-        echo '<link rel="preload" href="' . plugin_dir_url(__FILE__) . 'js/Cesium/Cesium.js" as="script">';
-        echo '<link rel="preload" href="' . plugin_dir_url(__FILE__) . 'js/Cesium/Widgets/widgets.css" as="style">';
-        echo '<link rel="preload" href="' . plugin_dir_url(__FILE__) . 'components/animal_tracker.js" as="script">';
+        echo '<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.js?ver=' . KUKUDUSHI_ENGINE_VERSION . '">';
+        echo '<link rel="preload" href="' . plugin_dir_url(__FILE__) . 'js/Cesium/Cesium.js?ver=' . KUKUDUSHI_ENGINE_VERSION . '" as="script">';
+        echo '<link rel="preload" href="' . plugin_dir_url(__FILE__) . 'js/Cesium/Widgets/widgets.css?ver=' . KUKUDUSHI_ENGINE_VERSION . '" as="style">';
+        echo '<link rel="preload" href="' . plugin_dir_url(__FILE__) . 'components/animal_tracker.js?ver=' . KUKUDUSHI_ENGINE_VERSION . '" as="script">';
+
     }
 }
 add_action('wp_head', 'preload_kukudushi_assets', 0);

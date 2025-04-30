@@ -5,7 +5,6 @@ require_once(dirname(__FILE__, 3) . '/managers/includes_manager.php');
 Includes_Manager::Instance()->include_php_file(Include_php_file_type::manager_scan);
 Includes_Manager::Instance()->include_php_file(Include_php_file_type::manager_animal);
 Includes_Manager::Instance()->include_php_file(Include_php_file_type::manager_location);
-Includes_Manager::Instance()->include_php_file(Include_php_file_type::manager_caption);
 
 generate_general_overview_of_today();
 
@@ -17,7 +16,6 @@ function generate_general_overview_of_today()
     $date_today_string = $now->format('Y-m-d');
     $scans_of_today = $scan_manager->get_scans_between_dates($date_today_string);
     $animal_info = get_active_animals_last_location_date(); //[$last_location, $animal]
-    $captions = get_captions_last_location_date();
 
     $total_scans = count($scans_of_today);
     $total_unique_scans = getUniqueScanCount($scans_of_today);
@@ -67,17 +65,6 @@ function get_active_animals_last_location_date()
     }
 
     return $animal_info;
-}
-
-function get_captions_last_location_date()
-{
-    $caption_info = [];
-    $caption_manager = Caption_Manager::Instance();
-    
-    //Get gospel last date
-    //Get horoscope last date
-
-    return $caption_info;
 }
 
 function getUniqueScanCount($scans)

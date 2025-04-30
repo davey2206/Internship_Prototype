@@ -8,7 +8,6 @@ Includes_Manager::Instance()->include_php_file(Include_php_file_type::manager_po
 Includes_Manager::Instance()->include_php_file(Include_php_file_type::manager_notification);
 Includes_Manager::Instance()->include_php_file(Include_php_file_type::obj_type_kukudushi_main_type);
 Includes_Manager::Instance()->include_php_file(Include_php_file_type::obj_type_kukudushi_type);
-Includes_Manager::Instance()->include_php_file(Include_php_file_type::misc_popup_interface);
 
 header('Content-Type: application/json');
 

@@ -10,13 +10,17 @@ export default {
   },
   data() {
     return {
+      activeTab: 'nfc-registration', // Default active tab
       isScanning: false,
       countdown: 0,
       lastScan: null,
       successMessage: '',
       errorMessage: '',
       models: [],
+      mainModels: [],
+      maestros: [],
       selectedModel: '',
+      selectedMaestroId: '', // For NFC Registration tab
       initialPoints: 1500,
       pointsDescription: 'Starting points to choose your first animal. Enjoy!',
       registrationCount: 0, // Counter for registered kukudushis
@@ -32,6 +36,24 @@ export default {
       processedUIDs: new Set(),
       debugEnabled: true, // Control debug logging
       pendingTagAnalysis: false, // Flag to track if we're waiting for tag analysis
+
+      // Model & Maestro management data
+      newMainModel: { name: '' },
+      newModel: { name: '', mainModelId: '' },
+      newMaestro: { name: '' },
+      selectedMainModel: null,
+      selectedModelToEdit: null,
+      selectedMaestro: null,
+      editMode: {
+        mainModel: false,
+        model: false,
+        maestro: false,
+      },
+      loading: {
+        mainModels: false,
+        models: false,
+        maestros: false,
+      },
     };
   },
   computed: {
@@ -49,6 +71,17 @@ export default {
       if (!this.lastScan) return '';
       const date = new Date(this.lastScan);
       return date.toLocaleTimeString();
+    },
+    formattedPoints() {
+      return this.initialPoints.toLocaleString();
+    },
+    activeModels() {
+      return this.models.filter((model) => model.is_active);
+    },
+
+    // Filter out inactive maestros for the NFC Registration dropdown
+    activeMaestros() {
+      return this.maestros.filter((maestro) => maestro.is_active);
     },
   },
   watch: {
@@ -92,111 +125,371 @@ export default {
         });
       }
     },
+    activeTab(newTab) {
+      if (newTab === 'models-maestros') {
+        this.fetchAllData();
+      }
+    },
   },
   template: `
-        <div class="nfc-registration-container">
-            <div class="registration-header">
-                <h2>Kukudushi NFC Registration</h2>
-                <button @click="showAdvancedSettings = !showAdvancedSettings">
-                    {{ showAdvancedSettings ? 'Hide' : 'Show' }} Advanced Settings
-                </button>
-            </div>
-            
-            <div class="registration-stats">
-                <h3>Registration Stats</h3>
-                <div class="registration-count">{{ registrationCount }}</div>
-                <div>Kukudushi's registered in this session</div>
-            </div>
-            
-            <div class="form-section">
-                <div class="form-row">
-                    <div class="form-label">Kukudushi Model:</div>
-                    <div class="form-input">
-                        <select v-model="selectedModel">
-                            <option value="">Select a model</option>
-                            <option v-for="model in models" :key="model.model_id" :value="model.model_id">
-                                {{ model.model_name }}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div v-if="showAdvancedSettings">
-                    <div class="form-row">
-                        <div class="form-label">Initial Points:</div>
-                        <div class="form-input">
-                            <input type="number" v-model.number="initialPoints" min="0" step="100">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-label">Points Description:</div>
-                        <div class="form-input">
-                            <input type="text" v-model="pointsDescription">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="scan-controls">
-                <button 
-                    class="scan-button" 
-                    :class="{ 'scanning': isScanning }"
-                    @click="toggleScanning"
-                    :disabled="!selectedModel"
-                >
-                    {{ isScanning ? 'Stop Scanning' : 'Start Scanning' }}
-                </button>
-                </div>
-            
-            <div class="scan-status">
-                <div class="scan-indicator" :class="isScanning ? 'active' : 'inactive'"></div>
-                <div>{{ isScanning ? 'Scanning mode active' : 'Scanning inactive' }}</div>
-                <div v-if="countdownDisplay" style="margin-left: 20px;">{{ countdownDisplay }}</div>
-            </div>
-            
-            <div v-if="errorMessage" class="status-message status-error">
-                {{ errorMessage }}
-            </div>
-            
-            <div v-if="successMessage" class="status-message status-success">
-                {{ successMessage }}
-            </div>
-            
-            <div v-if="registrationHistory.length > 0" class="registration-history">
-                <h3>Registration History</h3>
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Time</th>
-                            <th>Kukudushi ID</th>
-                            <th>Model</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(item, index) in registrationHistory" :key="index">
-                            <td>{{ formatTime(item.timestamp) }}</td>
-                            <td>{{ item.kukudushiId }}</td>
-                            <td>{{ getModelName(item.modelId) }}</td>
-                            <td>{{ item.success ? 'Success' : 'Failed' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+    <div class="nfc-registration-container">
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button 
+          :class="['tab-button', { active: activeTab === 'nfc-registration' }]" 
+          @click="activeTab = 'nfc-registration'"
+        >
+          NFC Registration
+        </button>
+        <button 
+          :class="['tab-button', { active: activeTab === 'models-maestros' }]" 
+          @click="activeTab = 'models-maestros'"
+        >
+          Models & Maestros
+        </button>
+      </div>
+      
+      <!-- NFC Registration Tab -->
+      <div v-if="activeTab === 'nfc-registration'" class="tab-content">
+        <div class="registration-header">
+          <h2>Kukudushi NFC Registration</h2>
+          <button @click="showAdvancedSettings = !showAdvancedSettings">
+            {{ showAdvancedSettings ? 'Hide' : 'Show' }} Advanced Settings
+          </button>
         </div>
-    `,
+        
+        <div class="registration-stats">
+          <h3>Registration Stats</h3>
+          <div class="registration-count">{{ registrationCount }}</div>
+          <div>Kukudushi's registered in this session</div>
+        </div>
+        
+        <div class="form-section">
+        <div class="form-row">
+          <div class="form-label">Kukudushi Model:</div>
+          <div class="form-input">
+            <select v-model="selectedModel" :disabled="loading.models">
+              <option value="">{{ loading.models ? 'Loading models...' : 'Select a model' }}</option>
+              <option v-for="model in activeModels" :key="model.model_id" :value="model.model_id">
+                {{ model.model_name }}
+              </option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-label">Maestro:</div>
+          <div class="form-input">
+            <select v-model="selectedMaestroId" :disabled="loading.maestros">
+              <option value="">{{ loading.maestros ? 'Loading maestros...' : 'Select a maestro (optional)' }}</option>
+              <option v-for="maestro in activeMaestros" :key="maestro.id" :value="maestro.id">
+                {{ maestro.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+          
+          <div v-if="showAdvancedSettings">
+            <div class="form-row">
+              <div class="form-label">Initial Points:</div>
+              <div class="form-input">
+                <input type="number" v-model.number="initialPoints" min="0" step="100">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-label">Points Description:</div>
+              <div class="form-input">
+                <input type="text" v-model="pointsDescription">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="scan-controls">
+          <button 
+            class="scan-button" 
+            :class="{ 'scanning': isScanning }"
+            @click="toggleScanning"
+            :disabled="!selectedModel"
+          >
+            {{ isScanning ? 'Stop Scanning' : 'Start Scanning' }}
+          </button>
+        </div>
+        
+        <div class="scan-status">
+          <div class="scan-indicator" :class="isScanning ? 'active' : 'inactive'"></div>
+          <div>{{ isScanning ? 'Scanning mode active' : 'Scanning inactive' }}</div>
+          <div v-if="countdownDisplay" style="margin-left: 20px;">{{ countdownDisplay }}</div>
+        </div>
+        
+        <div v-if="errorMessage" class="status-message status-error">
+          {{ errorMessage }}
+        </div>
+        
+        <div v-if="successMessage" class="status-message status-success">
+          {{ successMessage }}
+        </div>
+        
+        <div v-if="registrationHistory.length > 0" class="registration-history">
+          <h3>Registration History</h3>
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Kukudushi ID</th>
+                <th>Model</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in registrationHistory" :key="index">
+                <td>{{ formatTime(item.timestamp) }}</td>
+                <td>{{ item.kukudushiId }}</td>
+                <td>{{ getModelName(item.modelId) }}</td>
+                <td>{{ item.success ? 'Success' : 'Failed' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Models & Maestros Tab -->
+      <div v-if="activeTab === 'models-maestros'" class="tab-content">
+        <div class="models-maestros-container">
+          <h2>Models & Maestros Management</h2>
+          
+          <!-- Main Models Section -->
+          <div class="section main-models-section">
+            <h3>Main Models</h3>
+            <div class="loading-indicator" v-if="loading.mainModels">Loading...</div>
+            
+            <div class="list-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="mainModel in mainModels" :key="'main-'+mainModel.id">
+                    <td>{{ mainModel.id }}</td>
+                    <td>
+                      <span v-if="editMode.mainModel && selectedMainModel && selectedMainModel.id === mainModel.id">
+                        <input type="text" v-model="selectedMainModel.model_name" placeholder="Main Model Name" />
+                      </span>
+                      <span v-else>{{ mainModel.model_name }}</span>
+                    </td>
+                    <td>
+                      <button 
+                        v-if="editMode.mainModel && selectedMainModel && selectedMainModel.id === mainModel.id"
+                        @click="saveMainModel"
+                        class="save-button"
+                      >
+                        Save
+                      </button>
+                      <button 
+                        v-else
+                        @click="editMainModel(mainModel)"
+                        class="edit-button"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="add-form">
+              <h4>Add New Main Model</h4>
+              <div class="form-row">
+                <input type="text" v-model="newMainModel.name" placeholder="New Main Model Name" />
+                <button @click="addMainModel" :disabled="!newMainModel.name">Add</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Models Section -->
+          <div class="section models-section">
+            <h3>Models</h3>
+            <div class="loading-indicator" v-if="loading.models">Loading...</div>
+            
+            <div class="list-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Main Model</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="model in models" :key="'model-'+model.model_id">
+                    <td>{{ model.model_id }}</td>
+                    <td>
+                      <span v-if="editMode.model && selectedModelToEdit && selectedModelToEdit.model_id === model.model_id">
+                        <input type="text" v-model="selectedModelToEdit.model_name" placeholder="Model Name" />
+                      </span>
+                      <span v-else>{{ model.model_name }}</span>
+                    </td>
+                    <td>
+                      <span v-if="editMode.model && selectedModelToEdit && selectedModelToEdit.model_id === model.model_id">
+                        <select v-model="selectedModelToEdit.main_model">
+                          <option v-for="mainModel in mainModels" :key="mainModel.id" :value="mainModel.id">
+                            {{ mainModel.model_name }}
+                          </option>
+                        </select>
+                      </span>
+                      <span v-else>{{ getMainModelName(model.main_model) }}</span>
+                    </td>
+                    <td>
+                      <span :class="model.is_active ? 'status-active' : 'status-inactive'">
+                        {{ model.is_active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </td>
+                    <td>
+                      <button 
+                        v-if="editMode.model && selectedModelToEdit && selectedModelToEdit.model_id === model.model_id"
+                        @click="saveModel"
+                        class="save-button"
+                      >
+                        Save
+                      </button>
+                      <button 
+                        v-else
+                        @click="editModel(model)"
+                        class="edit-button"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        @click="toggleModelStatus(model)"
+                        :class="model.is_active ? 'deactivate-button' : 'activate-button'"
+                      >
+                        {{ model.is_active ? 'Deactivate' : 'Activate' }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="add-form">
+              <h4>Add New Model</h4>
+              <div class="form-row">
+                <input type="text" v-model="newModel.name" placeholder="New Model Name" />
+                <select v-model="newModel.mainModelId">
+                  <option value="">Select Main Model</option>
+                  <option v-for="mainModel in mainModels" :key="mainModel.id" :value="mainModel.id">
+                    {{ mainModel.model_name }}
+                  </option>
+                </select>
+                <button @click="addModel" :disabled="!newModel.name || !newModel.mainModelId">Add</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Maestros Section -->
+          <div class="section maestros-section">
+            <h3>Maestros</h3>
+            <div class="loading-indicator" v-if="loading.maestros">Loading...</div>
+            
+            <div class="list-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="maestro in maestros" :key="'maestro-'+maestro.id">
+                    <td>{{ maestro.id }}</td>
+                    <td>
+                      <span v-if="editMode.maestro && selectedMaestro && selectedMaestro.id === maestro.id">
+                        <input type="text" v-model="selectedMaestro.name" placeholder="Maestro Name" />
+                      </span>
+                      <span v-else>{{ maestro.name }}</span>
+                    </td>
+                    <td>
+                      <span :class="maestro.is_active ? 'status-active' : 'status-inactive'">
+                        {{ maestro.is_active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </td>
+                    <td>
+                      <button 
+                        v-if="editMode.maestro && selectedMaestro && selectedMaestro.id === maestro.id"
+                        @click="saveMaestro"
+                        class="save-button"
+                      >
+                        Save
+                      </button>
+                      <button 
+                        v-else
+                        @click="editMaestro(maestro)"
+                        class="edit-button"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        @click="toggleMaestroStatus(maestro)"
+                        :class="maestro.is_active ? 'deactivate-button' : 'activate-button'"
+                      >
+                        {{ maestro.is_active ? 'Deactivate' : 'Activate' }}
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="add-form">
+              <h4>Add New Maestro</h4>
+              <div class="form-row">
+                <input type="text" v-model="newMaestro.name" placeholder="New Maestro Name" />
+                <button @click="addMaestro" :disabled="!newMaestro.name">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
   mounted() {
-    this.fetchModels();
-    this.logToWP('NFC Registration component mounted', 'info');
+    // First, load main models and normal models in parallel
+    Promise.all([
+      this.fetchModels(),
+      this.fetchMainModels(),
+      this.fetchMaestros(), // Add this to load maestros on initial load
+    ])
+      .then(() => {
+        // Initialize success audio
+        this.successAudio = new Audio(
+          this.pluginDirUrl + 'media/audio/kukudushi-programmed-success.mp3'
+        );
 
-    // Initialize success audio
-    this.successAudio = new Audio(
-      this.pluginDirUrl + 'media/audio/kukudushi-programmed-success.mp3'
-    );
+        // Setup listener for NDEFReader scans
+        this.setupNFCReader();
 
-    // Setup listener for NDEFReader scans
-    this.setupNFCReader();
+        this.logToWP('Initial data loading completed', 'info', {
+          modelsCount: this.models.length,
+          mainModelsCount: this.mainModels.length,
+          maestrosCount: this.maestros.length,
+        });
+      })
+      .catch((error) => {
+        this.logToWP('Error loading initial data', 'error', {
+          error: error.message,
+        });
+        this.errorMessage = `Error initializing: ${error.message}`;
+      });
   },
   beforeUnmount() {
     this.stopScanning();
@@ -593,9 +886,15 @@ export default {
         this.successMessage = `Checking if tag is registered...`;
         this.$forceUpdate();
 
-        const existsInDatabase = await this.checkIfUIDExistsInDatabase(
-          uidToUse
-        );
+        let existsInDatabase = false;
+        try {
+          existsInDatabase = await this.checkIfUIDExistsInDatabase(uidToUse);
+        } catch (dbError) {
+          this.logToWP('Error checking database', 'error', {
+            error: dbError.message,
+          });
+          // Continue with existsInDatabase = false
+        }
 
         if (existsInDatabase) {
           // Already registered in database
@@ -631,7 +930,17 @@ export default {
           await new Promise((resolve) => setTimeout(resolve, 100));
 
           // Register in database
-          const registerSuccess = await this.registerKukudushi(uidToUse);
+          let registerSuccess = false;
+          try {
+            registerSuccess = await this.registerKukudushi(uidToUse);
+          } catch (regError) {
+            this.logToWP('Error registering Kukudushi', 'error', {
+              error: regError.message,
+            });
+            this.errorMessage = `Error registering tag: ${regError.message}`;
+            this.$forceUpdate();
+            // Don't rethrow, continue with registerSuccess = false
+          }
 
           if (registerSuccess) {
             this.successMessage = `Tag with Kukudushi URL registered (UID: ${uidToUse})`;
@@ -653,6 +962,9 @@ export default {
             this.playSuccessSound();
 
             this.$forceUpdate(); // Force UI update
+          } else {
+            this.errorMessage = 'Failed to register tag - please try again';
+            this.$forceUpdate();
           }
 
           return;
@@ -671,10 +983,20 @@ export default {
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         // First register in database
-        const registerSuccess = await this.registerKukudushi(cleanUID);
+        let registerSuccess = false;
+        try {
+          registerSuccess = await this.registerKukudushi(cleanUID);
 
-        if (!registerSuccess) {
-          throw new Error('Failed to register tag in database');
+          if (!registerSuccess) {
+            throw new Error('Failed to register tag in database');
+          }
+        } catch (regError) {
+          this.logToWP('Error registering tag in database', 'error', {
+            error: regError.message,
+          });
+          this.errorMessage = `Error registering tag: ${regError.message}`;
+          this.$forceUpdate();
+          throw regError; // Rethrow to stop processing
         }
 
         // Update success message after DB registration
@@ -1170,6 +1492,8 @@ export default {
     // Helper method to check if UID exists in database
     async checkIfUIDExistsInDatabase(uid) {
       try {
+        this.logToWP('Checking if UID exists in database', 'info', { uid });
+
         const dbResponse = await fetch(
           `${
             this.pluginDirUrl
@@ -1183,10 +1507,35 @@ export default {
           }
         );
 
+        // First check if the response is JSON
+        const contentType = dbResponse.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          this.logToWP('Non-JSON response from database check', 'error', {
+            contentType,
+            status: dbResponse.status,
+          });
+
+          // Try to get the text to see what was returned
+          try {
+            const text = await dbResponse.text();
+            this.logToWP('Response text from non-JSON response', 'error', {
+              text: text.substring(0, 200), // First 200 chars for logging
+            });
+          } catch (textError) {
+            this.logToWP('Could not get text from response', 'error', {
+              error: textError.message,
+            });
+          }
+
+          // Return false to indicate the UID doesn't exist rather than crashing
+          return false;
+        }
+
         if (!dbResponse.ok) {
           throw new Error(`Database check failed: ${dbResponse.status}`);
         }
 
+        // Now we can safely parse JSON
         const dbData = await dbResponse.json();
         this.logToWP('Database response received', 'info', { dbData });
 
@@ -1195,7 +1544,8 @@ export default {
         this.logToWP('Error checking UID in database', 'error', {
           error: error.message,
         });
-        throw error;
+        // Return false on error instead of throwing
+        return false;
       }
     },
 
@@ -1316,6 +1666,11 @@ export default {
           points_description: this.pointsDescription,
         };
 
+        // Add maestro_id if selected
+        if (this.selectedMaestroId) {
+          payload.maestro_id = this.selectedMaestroId;
+        }
+
         this.logToWP('Registering Kukudushi with backend', 'info', { payload });
 
         const response = await fetch(
@@ -1328,6 +1683,29 @@ export default {
             body: JSON.stringify(payload),
           }
         );
+
+        // Check if the response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          this.logToWP('Non-JSON response from registration', 'error', {
+            contentType,
+            status: response.status,
+          });
+
+          // Try to get the text to see what was returned
+          try {
+            const text = await response.text();
+            this.logToWP('Response text from non-JSON response', 'error', {
+              text: text.substring(0, 200), // First 200 chars for logging
+            });
+          } catch (textError) {
+            this.logToWP('Could not get text from response', 'error', {
+              error: textError.message,
+            });
+          }
+
+          throw new Error('Received non-JSON response from server');
+        }
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -1368,6 +1746,490 @@ export default {
     getModelName(modelId) {
       const model = this.models.find((m) => m.model_id === modelId);
       return model ? model.model_name : 'Unknown';
+    },
+
+    // Models & Maestros Tab Methods
+    fetchAllData() {
+      this.fetchMainModels();
+      this.fetchModels();
+      this.fetchMaestros();
+    },
+
+    async fetchMainModels() {
+      this.loading.mainModels = true;
+      try {
+        const response = await fetch(
+          `${this.pluginDirUrl}backend/get_main_models.php`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          this.mainModels = data;
+          this.logToWP('Main models fetched successfully', 'info', {
+            count: data.length,
+          });
+        }
+      } catch (error) {
+        this.logToWP('Error fetching main models', 'error', {
+          error: error.message,
+        });
+        this.errorMessage = 'Failed to load main model data';
+      } finally {
+        this.loading.mainModels = false;
+      }
+    },
+
+    async fetchMaestros() {
+      this.loading.maestros = true;
+      try {
+        const response = await fetch(
+          `${this.pluginDirUrl}backend/get_maestros.php`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          this.maestros = data;
+          this.logToWP('Maestros fetched successfully', 'info', {
+            count: data.length,
+          });
+        }
+      } catch (error) {
+        this.logToWP('Error fetching maestros', 'error', {
+          error: error.message,
+        });
+        this.errorMessage = 'Failed to load maestro data';
+      } finally {
+        this.loading.maestros = false;
+      }
+    },
+
+    getMainModelName(mainModelId) {
+      // Early return if no ID provided
+      if (!mainModelId) return 'Unknown';
+
+      // Debug log to see what we're getting
+      this.logToWP('Finding main model name', 'debug', {
+        mainModelId,
+        typeOfId: typeof mainModelId,
+        mainModelsAvailable: this.mainModels.length,
+        mainModels: this.mainModels,
+      });
+
+      // Convert string IDs to numbers for proper comparison
+      const searchId = parseInt(mainModelId);
+
+      // Find the main model
+      const mainModel = this.mainModels.find(
+        (m) => parseInt(m.id) === searchId
+      );
+
+      // Return the name or 'Unknown'
+      return mainModel ? mainModel.model_name : `Unknown (ID: ${mainModelId})`;
+    },
+
+    // Main Model CRUD
+    editMainModel(mainModel) {
+      this.selectedMainModel = JSON.parse(JSON.stringify(mainModel));
+      this.editMode.mainModel = true;
+    },
+
+    async saveMainModel() {
+      if (!this.selectedMainModel) return;
+
+      try {
+        const response = await fetch(
+          `${this.pluginDirUrl}backend/update_main_model.php`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(this.selectedMainModel),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          this.successMessage = 'Main model updated successfully';
+          this.fetchMainModels(); // Refresh the list
+        } else {
+          throw new Error(result.message || 'Failed to update main model');
+        }
+      } catch (error) {
+        this.errorMessage = `Error updating main model: ${error.message}`;
+        this.logToWP('Error updating main model', 'error', {
+          error: error.message,
+        });
+      } finally {
+        this.editMode.mainModel = false;
+        this.selectedMainModel = null;
+      }
+    },
+
+    async addMainModel() {
+      if (!this.newMainModel.name) return;
+
+      try {
+        const response = await fetch(
+          `${this.pluginDirUrl}backend/add_main_model.php`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model_name: this.newMainModel.name }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          this.successMessage = 'New main model added successfully';
+          this.newMainModel.name = ''; // Clear the input
+          this.fetchMainModels(); // Refresh the list
+        } else {
+          throw new Error(result.message || 'Failed to add main model');
+        }
+      } catch (error) {
+        this.errorMessage = `Error adding main model: ${error.message}`;
+        this.logToWP('Error adding main model', 'error', {
+          error: error.message,
+        });
+      }
+    },
+
+    // Model CRUD
+    editModel(model) {
+      this.selectedModelToEdit = JSON.parse(JSON.stringify(model));
+      this.editMode.model = true;
+    },
+
+    async saveModel() {
+      if (!this.selectedModelToEdit) return;
+
+      try {
+        const response = await fetch(
+          `${this.pluginDirUrl}backend/update_model.php`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(this.selectedModelToEdit),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          this.successMessage = 'Model updated successfully';
+          this.fetchModels(); // Refresh the list
+        } else {
+          throw new Error(result.message || 'Failed to update model');
+        }
+      } catch (error) {
+        this.errorMessage = `Error updating model: ${error.message}`;
+        this.logToWP('Error updating model', 'error', { error: error.message });
+      } finally {
+        this.editMode.model = false;
+        this.selectedModelToEdit = null;
+      }
+    },
+
+    async addModel() {
+      if (!this.newModel.name || !this.newModel.mainModelId) return;
+
+      try {
+        const response = await fetch(
+          `${this.pluginDirUrl}backend/add_model.php`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model_name: this.newModel.name,
+              main_model: this.newModel.mainModelId,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          this.successMessage = 'New model added successfully';
+          this.newModel.name = '';
+          this.newModel.mainModelId = '';
+          this.fetchModels(); // Refresh the list
+        } else {
+          throw new Error(result.message || 'Failed to add model');
+        }
+      } catch (error) {
+        this.errorMessage = `Error adding model: ${error.message}`;
+        this.logToWP('Error adding model', 'error', { error: error.message });
+      }
+    },
+
+    // Maestro CRUD
+    editMaestro(maestro) {
+      this.selectedMaestro = JSON.parse(JSON.stringify(maestro));
+      this.editMode.maestro = true;
+    },
+
+    async saveMaestro() {
+      if (!this.selectedMaestro) return;
+
+      try {
+        const response = await fetch(
+          `${this.pluginDirUrl}backend/update_maestro.php`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(this.selectedMaestro),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          this.successMessage = 'Maestro updated successfully';
+          this.fetchMaestros(); // Refresh the list
+        } else {
+          throw new Error(result.message || 'Failed to update maestro');
+        }
+      } catch (error) {
+        this.errorMessage = `Error updating maestro: ${error.message}`;
+        this.logToWP('Error updating maestro', 'error', {
+          error: error.message,
+        });
+      } finally {
+        this.editMode.maestro = false;
+        this.selectedMaestro = null;
+      }
+    },
+
+    async addMaestro() {
+      if (!this.newMaestro.name) return;
+
+      try {
+        const response = await fetch(
+          `${this.pluginDirUrl}backend/add_maestro.php`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: this.newMaestro.name }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          this.successMessage = 'New maestro added successfully';
+          this.newMaestro.name = ''; // Clear the input
+          this.fetchMaestros(); // Refresh the list
+        } else {
+          throw new Error(result.message || 'Failed to add maestro');
+        }
+      } catch (error) {
+        this.errorMessage = `Error adding maestro: ${error.message}`;
+        this.logToWP('Error adding maestro', 'error', { error: error.message });
+      }
+    },
+
+    // Original NFC Registration Methods
+    // Debug logging helper that sends to WordPress debug.log
+    async logToWP(message, level = 'debug', context = {}) {
+      if (!this.debugEnabled) return;
+
+      // Also log to console for immediate feedback
+      if (level === 'error') {
+        console.error(message, context);
+      } else {
+        console.log(message, context);
+      }
+
+      try {
+        // Send log to WordPress backend endpoint
+        await fetch(`${this.pluginDirUrl}backend/log_to_debug.php`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message,
+            level,
+            context: JSON.stringify(context),
+            source: 'nfc_registration.js',
+          }),
+        });
+      } catch (error) {
+        // Fallback to console if logging fails
+        console.error('Error sending log to WordPress:', error);
+      }
+    },
+
+    async fetchModels() {
+      this.loading.models = true;
+      try {
+        this.logToWP('Fetching Kukudushi models');
+        const response = await fetch(
+          `${this.pluginDirUrl}backend/get_models.php`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          this.models = data;
+          this.logToWP('Models fetched successfully', 'info', {
+            count: data.length,
+          });
+        }
+      } catch (error) {
+        this.logToWP('Error fetching models', 'error', {
+          error: error.message,
+        });
+        this.errorMessage = 'Failed to load model data';
+      } finally {
+        this.loading.models = false;
+      }
+    },
+
+    setupNFCReader() {
+      if ('NDEFReader' in window) {
+        this.logToWP('Web NFC is supported!', 'info');
+      } else {
+        this.errorMessage =
+          'Web NFC is not supported in this browser. Please use Chrome on Android.';
+        this.logToWP('Web NFC is not supported in this browser', 'error');
+      }
+    },
+
+    toggleScanning() {
+      if (this.isScanning) {
+        this.stopScanning();
+      } else {
+        this.startScanning();
+      }
+    },
+
+    // Include the rest of your existing NFC registration methods here...
+    // (startScanning, stopScanning, analyzeTagContentsFromEvent, processTagWithContent, etc.)
+
+    formatTime(date) {
+      return new Date(date).toLocaleTimeString();
+    },
+
+    getModelName(modelId) {
+      const model = this.models.find((m) => m.model_id === modelId);
+      return model ? model.model_name : 'Unknown';
+    },
+    async toggleModelStatus(model) {
+      try {
+        const newStatus = !model.is_active;
+        const response = await fetch(
+          `${this.pluginDirUrl}backend/toggle_model_status.php`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model_id: model.model_id,
+              is_active: newStatus,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Update local model status
+          model.is_active = newStatus;
+          this.successMessage = `Model ${
+            newStatus ? 'activated' : 'deactivated'
+          } successfully`;
+
+          // If the currently selected model was deactivated, reset selection
+          if (!newStatus && this.selectedModel === model.model_id) {
+            this.selectedModel = '';
+          }
+        } else {
+          throw new Error(result.message || 'Failed to update model status');
+        }
+      } catch (error) {
+        this.errorMessage = `Error updating model status: ${error.message}`;
+        this.logToWP('Error toggling model status', 'error', {
+          error: error.message,
+        });
+      }
+    },
+
+    // Toggle maestro active status
+    async toggleMaestroStatus(maestro) {
+      try {
+        const newStatus = !maestro.is_active;
+        const response = await fetch(
+          `${this.pluginDirUrl}backend/toggle_maestro_status.php`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: maestro.id,
+              is_active: newStatus,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Update local maestro status
+          maestro.is_active = newStatus;
+          this.successMessage = `Maestro ${
+            newStatus ? 'activated' : 'deactivated'
+          } successfully`;
+
+          // If the currently selected maestro was deactivated, reset selection
+          if (!newStatus && this.selectedMaestroId === maestro.id) {
+            this.selectedMaestroId = '';
+          }
+        } else {
+          throw new Error(result.message || 'Failed to update maestro status');
+        }
+      } catch (error) {
+        this.errorMessage = `Error updating maestro status: ${error.message}`;
+        this.logToWP('Error toggling maestro status', 'error', {
+          error: error.message,
+        });
+      }
     },
   },
 };

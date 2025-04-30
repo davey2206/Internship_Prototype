@@ -54,6 +54,7 @@ export default {
         :isNotification="false"
         :padding="8"
         @scroll-into-view-if-needed="scrollIntoViewIfNeeded"
+        @target-clicked="handleTargetElementClicked"
       />
     </div>
   `,
@@ -204,37 +205,51 @@ export default {
 
                 turtleAnimal.is_owned = true;
 
-                const maxAttempts = 3;
-                let attempts = 0;
-                let markerElement = null;
-                let isSeparated = false;
-
-                while (attempts < maxAttempts && !isSeparated) {
-                  isSeparated = await this.ensureMarkerSeparated(
-                    turtleAnimal.id
-                  );
-
-                  if (!isSeparated) {
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    attempts++;
-                  } else {
-                    await new Promise((resolve) => setTimeout(resolve, 500));
+                // First, try to find the marker directly
+                let markerElement = this.findMarkerElement(turtleAnimal.id);
+                
+                // If not found initially, try to make it visible
+                if (!markerElement) {
+                  // Try to ensure marker is separated and visible
+                  const isSeparated = await this.ensureMarkerSeparated(turtleAnimal.id);
+                  
+                  // Check again after separation attempt
+                  if (isSeparated) {
+                    await new Promise((resolve) => setTimeout(resolve, 500)); 
                     markerElement = this.findMarkerElement(turtleAnimal.id);
                   }
                 }
 
                 if (markerElement) {
+                  // Marker found, highlight it
                   this.currentTutorialStep.highlightElement = `[data-marker-id="${turtleAnimal.id}"]`;
-                  console.log(
-                    'Set highlight element:',
-                    this.currentTutorialStep.highlightElement
-                  );
+                  console.log('Set highlight element:', this.currentTutorialStep.highlightElement);
                 } else {
-                  console.warn(
-                    'Failed to separate marker after',
-                    attempts,
-                    'attempts'
+                  // Marker not found - change step text to guide user
+                  console.warn('Could not find marker element for highlighting');
+                  this.currentTutorialStep.text = 'Find the turtle on the map and click on it to see its details.';
+                  
+                  // Force fly to the position to make it more likely to be visible
+                  const track = this.$parent.track_data_collection.find(
+                    (track) => track.id === turtleAnimal.id
                   );
+                  
+                  if (track && track.positions && track.positions.length > 0) {
+                    const position = track.positions[0].position;
+                    
+                    await new Promise((resolve) => {
+                      this.viewer.camera.flyTo({
+                        destination: position,
+                        orientation: {
+                          heading: 0,
+                          pitch: Cesium.Math.toRadians(-45),
+                          roll: 0
+                        },
+                        duration: 1.5,
+                        complete: resolve
+                      });
+                    });
+                  }
                 }
               }
             }.bind(this);
@@ -662,6 +677,18 @@ export default {
 
       this.currentObserver = observer;
     },
+    
+    // Handler for when the target element is clicked
+    handleTargetElementClicked() {
+      console.log('Target element clicked - hiding mask immediately');
+      
+      // Set transitioning to true to hide mask and overlay immediately
+      this.isStepTransitioning = true;
+      
+      // Don't automatically proceed to next step - let validation handle that
+      // The validation process is already watching for DOM changes that indicate
+      // the user's action was successful (e.g., infobox appearing)
+    },
     cleanupStepValidation() {
       if (this.currentObserver) {
         this.currentObserver.disconnect();
@@ -730,9 +757,18 @@ export default {
     async handleNextStep() {
       // Immediately mark as transitioning to hide current mask
       this.isStepTransitioning = true;
+      
+      // Remove any highlight immediately
+      this.removeHighlight();
 
       const baseModal = this.$refs.baseModal;
       baseModal.modalVisible = false;
+      
+      // Clean up any mask or overlay
+      const tutorialMask = this.$refs.tutorialMask;
+      if (tutorialMask && typeof tutorialMask.cleanup === 'function') {
+        tutorialMask.cleanup();
+      }
 
       baseModal.fadeOutSpeechCircles(async () => {
         setTimeout(async () => {
@@ -1117,15 +1153,20 @@ export default {
       this.$emit('tutorial-skipped');
     },
     handleTutorialEnd() {
+      // Immediately hide mask and remove highlight
+      this.isStepTransitioning = true;
+      this.removeHighlight();
+      
+      // Cleanup mask immediately
+      const tutorialMask = this.$refs.tutorialMask;
+      if (tutorialMask && typeof tutorialMask.cleanup === 'function') {
+        tutorialMask.cleanup();
+      }
+      
       if (this.isLastStep) {
         this.completeTutorial();
       } else {
         this.skipTutorial();
-      }
-
-      const tutorialMask = this.$refs.tutorialMask;
-      if (tutorialMask && typeof tutorialMask.cleanup === 'function') {
-        tutorialMask.cleanup();
       }
     },
     waitForModal() {
@@ -1174,10 +1215,6 @@ export default {
       return foundMarker;
     },
     async ensureMarkerSeparated(animalId) {
-      let isMarkerGrouped = true;
-      let attempts = 0;
-      const maxAttempts = 10;
-
       // Find the animal's track data
       const track = this.$parent.track_data_collection.find(
         (track) => track.id === animalId
@@ -1194,86 +1231,233 @@ export default {
         console.warn('No valid position found in track');
         return false;
       }
-
-      // Find the marker manager component instance
-      const markerManager = Array.from(
-        document.querySelectorAll('[data-marker-manager]')
-      ).find((el) => el.__vueParentComponent?.ctx)?.__vueParentComponent?.ctx;
-
-      const checkIfInGroup = () => {
+      
+      // Helper to check if marker is visible
+      const checkForMarker = () => {
         const markerComponents = document.querySelectorAll('[data-marker-id]');
-
-        // Check if target's marker has groupMember class
+        console.log('Checking for markers, found:', markerComponents.length);
+        
+        // Look for our specific marker
         const targetMarker = Array.from(markerComponents).find(
-          (marker) =>
-            marker.getAttribute('data-marker-id') === animalId.toString()
+          (marker) => marker.getAttribute('data-marker-id') === animalId.toString()
         );
+        
+        return targetMarker;
+      };
+      
+      // Helper to check if marker is in a group
+      const checkIfInGroup = () => {
+        const targetMarker = checkForMarker();
+        
+        if (!targetMarker) {
+          console.log('Target marker not found in DOM');
+          return null; // Return null to indicate marker not found
+        }
 
-        const isInGroup =
-          targetMarker?.classList.contains('groupMember') || false;
-        console.log(
-          'Is in group:',
-          isInGroup,
-          'Marker classes:',
-          targetMarker?.classList
-        );
+        const isInGroup = targetMarker.classList.contains('groupMember');
+        console.log('Is in group:', isInGroup, 'Marker classes:', targetMarker.classList);
 
         return isInGroup;
       };
-
-      while (isMarkerGrouped && attempts < maxAttempts) {
-        console.log(`Separation attempt ${attempts + 1}`);
-
-        // Initial check if marker is in group
-        isMarkerGrouped = checkIfInGroup();
-        if (!isMarkerGrouped) {
-          console.log('Target animal is not in a group');
+      
+      // STEP 1: First, fly to a DEFAULT viewing distance to get marker in view
+      // Ensure we're properly centered on the target position
+      const targetPosition = firstPositionEntity.position;
+      console.log('STEP 1: Flying to DEFAULT view position with precise marker centering');
+      
+      // Calculate a reasonable altitude - about 350km
+      const DEFAULT_VIEW_DISTANCE = 350000;
+      
+      // Extract cartographic coordinates
+      const cartographic = Cesium.Cartographic.fromCartesian(targetPosition);
+      
+      // Calculate an adjusted position that will center the marker in view
+      // We need to offset our viewpoint southward to ensure the marker (which appears above ground) is centered
+      const adjustedLat = cartographic.latitude - 0.005; // Shift camera position slightly south
+      
+      // Create a camera position that's offset to ensure marker is centered
+      const cameraPosition = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        adjustedLat, // Offset south
+        cartographic.height + DEFAULT_VIEW_DISTANCE
+      );
+      
+      // Calculate the direction vector from camera to target
+      const direction = Cesium.Cartesian3.subtract(
+        targetPosition, 
+        cameraPosition, 
+        new Cesium.Cartesian3()
+      );
+      Cesium.Cartesian3.normalize(direction, direction);
+      
+      // Calculate up vector for camera
+      const up = new Cesium.Cartesian3(0, 0, 1); // Use Z-up coordinate system
+      
+      // Important: Use precise directional targeting to ensure the marker is centered
+      await new Promise((resolve) => {
+        this.viewer.camera.flyTo({
+          destination: cameraPosition,
+          orientation: {
+            direction: direction,
+            up: up
+          },
+          duration: 1.5,
+          complete: resolve
+        });
+      });
+      
+      // Wait for markers to render
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // STEP 2: Check if marker is visible and if it's in a group
+      console.log('STEP 2: Checking if marker is visible and in group');
+      const isInGroup = checkIfInGroup();
+      
+      // If marker is found and not in a group, we're done
+      if (isInGroup === false) {
+        console.log('Success: Marker is visible and NOT in a group');
+        return true;
+      }
+      
+      // If marker is not found at all, try a closer view and a different perspective
+      if (isInGroup === null) {
+        console.log('Marker not found, trying closer view with adjusted position');
+        
+        // Try a closer view at about 200km
+        const CLOSER_VIEW_DISTANCE = 200000;
+        
+        // Adjust the camera position slightly to the north to ensure
+        // the marker (which is slightly south) is in view
+        await new Promise((resolve) => {
+          // Calculate a position slightly north of the target
+          const adjustedLat = cartographic.latitude + 0.01; // Adjust latitude northward
+          
+          this.viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromRadians(
+              cartographic.longitude,
+              adjustedLat, // Adjusted northward
+              CLOSER_VIEW_DISTANCE
+            ),
+            orientation: {
+              heading: 0,
+              pitch: Cesium.Math.toRadians(-70), // Even steeper pitch to look more toward the target
+              roll: 0
+            },
+            duration: 1.5,
+            complete: resolve
+          });
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check again at closer view
+        const stillInGroup = checkIfInGroup();
+        if (stillInGroup === false) {
+          console.log('Success: Marker visible at closer view and NOT in group');
           return true;
         }
-
-        console.log('Target found in group, zooming in');
-
+        
+        // If still not found, try looking directly at the target with a steeper angle
+        if (stillInGroup === null) {
+          console.log('Still cannot find marker, trying direct look-at approach');
+          
+          await new Promise((resolve) => {
+            // Use lookAt which guarantees the target is in the center of the view
+            this.viewer.camera.lookAt(
+              targetPosition,
+              new Cesium.HeadingPitchRange(
+                0,
+                Cesium.Math.toRadians(-80),
+                150000 // Even closer
+              )
+            );
+            
+            // We need to complete the movement
+            this.viewer.camera.moveComplete = resolve;
+            setTimeout(resolve, 1500); // Fallback if moveComplete doesn't trigger
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Final check
+          const finalCheck = checkIfInGroup();
+          if (finalCheck === false) {
+            console.log('Success: Finally found marker with direct approach');
+            return true;
+          }
+          
+          if (finalCheck === null) {
+            console.log('Still cannot find marker with direct approach');
+            return false;
+          }
+        }
+      }
+      
+      // STEP 3: If marker is in a group, we need to separate it
+      console.log('STEP 3: Marker is in a group, attempting to separate');
+      
+      // Starting separation attempts
+      let attempts = 0;
+      const maxAttempts = 5;
+      
+      while (attempts < maxAttempts) {
+        console.log(`Separation attempt ${attempts + 1}`);
+        
         // Get current camera position relative to target
-        const targetPosition = firstPositionEntity.position;
         const currentDistance = Cesium.Cartesian3.distance(
           this.viewer.camera.position,
           targetPosition
         );
 
-        // More aggressive zoom - 60% closer each time
-        const newDistance = currentDistance * 0.4;
+        // Gradual zoom - 30% closer each time (less aggressive than 60%)
+        const newDistance = currentDistance * 0.7;
+        
+        // Try different viewing angles each time
+        const headingOffset = (attempts * Math.PI / 4) % (2 * Math.PI);
 
-        // Perform zoom while maintaining center on target
+        // Zoom in gradually to separate marker
         await new Promise((resolve) => {
-          this.viewer.camera.flyToBoundingSphere(
-            new Cesium.BoundingSphere(targetPosition, currentDistance),
-            {
-              duration: 0.5,
-              offset: new Cesium.HeadingPitchRange(
-                this.viewer.camera.heading,
-                Cesium.Math.toRadians(-45),
-                newDistance
-              ),
-              easingFunction: Cesium.EasingFunction.LINEAR_NONE,
-              complete: resolve,
-            }
+          // Use lookAt instead of flyToBoundingSphere to ensure target is centered
+          this.viewer.camera.lookAt(
+            targetPosition,
+            new Cesium.HeadingPitchRange(
+              headingOffset,
+              Cesium.Math.toRadians(-70), // Steeper angle
+              newDistance
+            )
           );
+          
+          // We need to complete the movement
+          this.viewer.camera.moveComplete = resolve;
+          setTimeout(resolve, 800); // Fallback if moveComplete doesn't trigger
         });
 
-        // Wait a bit for Vue to update
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-        // Final group check for this attempt
-        isMarkerGrouped = checkIfInGroup();
-        if (!isMarkerGrouped) {
-          console.log('Target separated after zooming');
+        // Check if separation succeeded
+        const stillInGroup = checkIfInGroup();
+        if (stillInGroup === false) {
+          console.log('Success: Marker separated from group');
           return true;
+        }
+        
+        if (stillInGroup === null) {
+          console.log('Warning: Lost marker during separation attempt');
+          // Try a different angle next time
         }
 
         attempts++;
       }
 
-      return !isMarkerGrouped;
+      // If we reach here, could not separate marker
+      const finalMarker = checkForMarker();
+      if (finalMarker) {
+        console.log('Found marker on final check, even if still in a group');
+        return true; // At least we've found a marker
+      }
+
+      console.log('Failed to find/separate marker after all attempts');
+      return false;
     },
     getMarkerPosition(markerElement) {
       try {

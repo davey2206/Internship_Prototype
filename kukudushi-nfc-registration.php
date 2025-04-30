@@ -35,7 +35,7 @@ function kukudushi_nfc_registration_scripts($hook) {
     }
     
     // Enqueue Vue.js
-    wp_enqueue_script('vue-js', 'https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.js', array(), null, true);
+    wp_enqueue_script('vue-js', 'https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.prod.js', array(), KUKUDUSHI_ENGINE_VERSION, true);
     
     // Enqueue our registration app script
     wp_enqueue_script(

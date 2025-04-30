@@ -45,6 +45,7 @@ export default {
         @update-user-menu="updateUserMenu"
         @activate-animals-tab="changeAnimalManagerMenuTabToAnimals"
         @close-infobox="closeInfobox"
+        @force-show-marker="focusOnAnimal"
         @tutorial-completed="handleTutorialComplete"
         @tutorial-skipped="handleTutorialSkipped"
       />
@@ -702,6 +703,122 @@ export default {
 
       console.log('Animals tab activated');
     },
+    // Method specifically for tutorial support
+    focusOnAnimal(animalId) {
+      console.log('Tutorial requested to focus on animal ID:', animalId);
+      
+      // Find the animal in the list
+      const animal = this.animals.find(a => a.id === animalId);
+      if (!animal) {
+        console.error('Cannot focus on animal - ID not found:', animalId);
+        return;
+      }
+      
+      // Make sure the animal is set as owned for tutorial purposes
+      animal.is_owned = true;
+      
+      // Find the corresponding track
+      const track = this.track_data_collection.find(t => t.id === animalId);
+      if (!track || !track.positions || track.positions.length === 0) {
+        console.error('No track data found for animal:', animalId);
+        return;
+      }
+      
+      // Get position
+      const position = track.positions[0].position;
+      
+      // Ensure the animal is selected so tracks are visible
+      if (!this.selectedAnimalIds.includes(animalId)) {
+        this.selectedAnimalIds.push(animalId);
+        this.updateTrackVisibility();
+      }
+      
+      // Use a reasonable default altitude of ~350km
+      const DEFAULT_VIEW_ALTITUDE = 350000;
+      
+      console.log('Setting up precisely centered view on animal marker');
+      
+      // Get cartographic coordinates
+      const cartographic = Cesium.Cartographic.fromCartesian(position);
+      
+      // Calculate an adjusted position that will center the marker in view
+      // We need to offset our viewpoint southward to ensure the marker (which rises above ground) is centered
+      const adjustedLat = cartographic.latitude - 0.005; // Shift camera position slightly south
+      
+      // Create a camera position that's offset to ensure marker is centered
+      const cameraPosition = Cesium.Cartesian3.fromRadians(
+        cartographic.longitude,
+        adjustedLat, // Offset south
+        cartographic.height + DEFAULT_VIEW_ALTITUDE
+      );
+      
+      // Calculate the direction vector from camera to target
+      const direction = Cesium.Cartesian3.subtract(
+        position, 
+        cameraPosition, 
+        new Cesium.Cartesian3()
+      );
+      Cesium.Cartesian3.normalize(direction, direction);
+      
+      // Calculate up vector for camera
+      const up = new Cesium.Cartesian3(0, 0, 1); // Use Z-up coordinate system
+      
+      // Fly to the position with precise targeting
+      this.viewer.camera.flyTo({
+        destination: cameraPosition,
+        orientation: {
+          direction: direction,
+          up: up
+        },
+        duration: 2.0,
+        complete: () => {
+          console.log('Camera positioned with marker perfectly centered');
+          
+          // Verify the marker is visible and centered
+          setTimeout(() => {
+            // Check if we need to adjust further
+            const markerElement = document.querySelector(`[data-marker-id="${animalId}"]`);
+            if (markerElement) {
+              const rect = markerElement.getBoundingClientRect();
+              const viewportHeight = window.innerHeight;
+              const viewportWidth = window.innerWidth;
+              
+              // Check if marker is in the center third of the screen vertically
+              const isVerticallyWellCentered = (rect.top > viewportHeight/3 && rect.bottom < viewportHeight*2/3);
+              
+              console.log('Marker position in viewport:', {
+                top: rect.top,
+                bottom: rect.bottom,
+                left: rect.left,
+                right: rect.right,
+                viewportHeight,
+                viewportWidth,
+                isVerticallyWellCentered
+              });
+              
+              // If marker is not well centered, make one more adjustment
+              if (!isVerticallyWellCentered) {
+                console.log('Fine-tuning marker position to ensure it\'s centered');
+                
+                // Create a direct look vector to the target
+                this.viewer.camera.lookAt(
+                  position,
+                  new Cesium.HeadingPitchRange(
+                    0,
+                    Cesium.Math.toRadians(-35), // Less steep angle to center better
+                    DEFAULT_VIEW_ALTITUDE
+                  )
+                );
+              }
+            }
+            
+            // Signal that animal markers should be refreshed
+            this.$emit('refresh-markers');
+          }, 500);
+        }
+      });
+    },
+    
     focusAnimal(animal, selectEntity = false) {
       this.flyToFirstPosition(animal, () => {
         if (selectEntity) {

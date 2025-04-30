@@ -8,14 +8,16 @@ header('Content-Type: application/json');
 
 $kukudushi_manager = Kukudushi_Manager::Instance();
 
-// Get all active models
-$models = $kukudushi_manager->getAllModels();;
+// Get all models
+$models = $kukudushi_manager->getAllModels();
 
-// Format data for frontend
+// Format data for frontend - include is_active field and id
 $formatted_models = array_map(function($model) {
     return [
         'model_id' => $model->model_id,
-        'model_name' => $model->model_name
+        'model_name' => $model->model_name,
+        'main_model' => $model->main_model,
+        'is_active' => isset($model->is_active) ? (bool)$model->is_active : true // Include active status
     ];
 }, $models);
 
