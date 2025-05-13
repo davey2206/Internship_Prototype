@@ -45,6 +45,7 @@ if (!$kukudushi->exists || $kukudushi->temporary_id_expired) {
             'original_points_amount' => 0,
             'points_awarded' => 0,
         ],
+        'points_streak' => 0,
         'notifications_data' => [],
     ];
 } else {
@@ -56,6 +57,7 @@ if (!$kukudushi->exists || $kukudushi->temporary_id_expired) {
     $original_points_amount = $kukudushi_manager->points_manager->getTotalPoints($kukudushi);
     $kukudushi_manager->points_manager->register_points($kukudushi);
     $points_awarded = $kukudushi_manager->points_manager->points_awarded->amount ?? 0;
+    $points_streak = $kukudushi_manager->points_manager->dayStreak($kukudushi->id);
 
     // Get notifications
     $notifications = $kukudushi_manager->notification_manager->getAllRemainingNotifications($kukudushi->id);
@@ -105,6 +107,7 @@ if (!$kukudushi->exists || $kukudushi->temporary_id_expired) {
             'original_points_amount' => $original_points_amount,
             'points_awarded' => $points_awarded,
         ],
+        'points_streak' => $points_streak,
         'notifications_data' => $notifications,
     ];
 }

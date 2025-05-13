@@ -1,0 +1,19 @@
+#login-streak{
+    position: absolute;
+    display: flex;
+    color: white;
+    width: 100%;
+    height: 100vh;
+    background-image: url('/wp-content/plugins/kukudushi-engine-vue/media/menu-component-background.webp');
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    z-index: 10001;
+}
+.login-streak-container{
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    margin-top: 30vh;
+}

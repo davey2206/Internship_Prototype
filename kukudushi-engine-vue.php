@@ -96,6 +96,7 @@ function enqueue_kukudushi_vue_widget() {
             'tutorial-css' => 'css/tutorial-manager.css',
             'animal-tracker-css' => 'css/animal-tracker.css',
             'user-menu-css' => 'css/user-menu.css',
+            'login-streak-css' => 'css/login-streak.css',
             'my-animals-css' => 'css/my-animals.css',
             'cesium-custom-infobox' => 'css/cesium-custom-infobox.css'
         );

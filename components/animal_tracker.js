@@ -1,3 +1,4 @@
+import LoginStreakComponent from './login_streak_window.js';
 import ExpiredSessionModal from './expired_session_modal.js';
 import NotificationManager from './notification_manager.js';
 import TutorialManager from './tutorial_manager.js';
@@ -21,6 +22,7 @@ export default {
     markerManagerComponent,
     animalMarkerComponent,
     ExpiredSessionModal,
+    LoginStreakComponent,
   },
   template: `
     <div>
@@ -87,6 +89,13 @@ export default {
         <div class="header-bottom">
         </div>
       </div>
+
+      <LoginStreakComponent 
+        :loading="loading"
+        :loadingComplete="loadingComplete"
+        :points_data="points_data"
+        :points_streak="points_streak"
+      />
       
       <!-- Animal Select Panel -->
       <div id="animal-select-panel" v-show="animalManagerMenuVisible">
@@ -214,6 +223,7 @@ export default {
       buyingAnimalId: null,
       pluginDirUrl: kukudushiData.plugin_url,
       points_data: null,
+      points_streak: null,
       notificationData: [],
       track_data_collection: [],
       selectedAnimalIds: [], // Store multiple selected animal IDs
@@ -977,6 +987,7 @@ export default {
           }
 
           this.points_data = data.points_data;
+          this.points_streak = data.points_streak;
           this.notificationData = data.notifications_data;
 
           // Set activeModalType if we have notifications
