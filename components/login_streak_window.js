@@ -1,17 +1,22 @@
 export default {
   template: `
-    <div id="login-streak" :style="display">
-        <div class="login-streak-container">
-            <h1>Login Streak</h1>
-            <h2> {{ points_streak }} </h2>
+    <div id="login-streak">
+      <div class="login-streak-container">
+        <div class="streak-header">
+          <div class="streak-reward">+{{ points_data.points_awarded }} <img :src="pluginDirUrl + '/media/plus_points_coin.webp'" class="coin-icon" /></div>
+          <div class="streak-day">Streak day {{ points_streak }}</div>
         </div>
-        <div v-if="loading" class="animal-tracker-loading-spinner"></div>
-        <div v-else-if="loadingComplete" class="loading-complete">
-            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none" />
-                <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
-            </svg>
+
+        <div class="streak-grid">
+          <div v-for="(day, index) in 10" :key="index" class="streak-day-box" :class="{ 'checked': index < currentDay }">
+            <div class="day-number">{{ index + 1 }}</div>
+            <div class="reward-text">
+              +10 
+              <img :src="pluginDirUrl + '/media/plus_points_coin.webp'" class="coin-small" />
+            </div>
+          </div>
         </div>
+      </div>
     </div>
   `,
   components: {
@@ -33,6 +38,7 @@ export default {
       type: Array,
       required: true,
     },
+    pluginDirUrl: String,
   },
   computed: {
     //dont display if already loged in today

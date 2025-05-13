@@ -1,14 +1,15 @@
 #login-streak{
     position: absolute;
-    display: flex;
-    color: white;
-    width: 100%;
+    color: gold;
     height: 100vh;
+    width: 100%;
     background-image: url('/wp-content/plugins/kukudushi-engine-vue/media/menu-component-background.webp');
     background-position: 50% 50%;
     background-repeat: no-repeat;
     background-size: cover;
     z-index: 10001;
+    text-align: center;
+    font-family: 'Nunito', Sans-serif;
 }
 .login-streak-container{
     justify-content: center;
@@ -16,4 +17,85 @@
     text-align: center;
     width: 100%;
     margin-top: 30vh;
+}
+
+.streak-header {
+    margin-bottom: 20px;
+}
+
+.streak-reward {
+    font-size: 48px;
+    color: gold;
+    font-weight: bold;
+}
+
+.coin-icon {
+    width: 50px;
+    vertical-align: sub;
+}
+
+.streak-day {
+    font-size: 28px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.streak-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+}
+
+.streak-day-box {
+    width: 60px;
+    height: 60px;
+    background-color: #7282f5;
+    border-radius: 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    border: solid gold;
+}
+
+.streak-day-box.checked {
+    background-color: #f5c542;
+}
+
+.checkmark {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 16px;
+    color: green;
+}
+
+.reward-icon {
+    width: 32px;
+    margin-top: 4px;
+}
+
+.reward-text {
+    color: gold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.coin-small {
+    width: 16px;
+    margin-left: 4px;
+}
+
+.day-number {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-size: 12px;
+    color: #333;
 }

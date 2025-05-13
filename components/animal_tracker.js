@@ -95,6 +95,7 @@ export default {
         :loadingComplete="loadingComplete"
         :points_data="points_data"
         :points_streak="points_streak"
+        :pluginDirUrl="pluginDirUrl"
       />
       
       <!-- Animal Select Panel -->
