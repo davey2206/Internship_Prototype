@@ -67,17 +67,11 @@ class Points_Manager
 
     public function getStreakPointsAmount($streak)
     {
-        switch ($streak) {
-            case 1:
-                return 20;
-            case 2:
-                return 30;
-            case 3:
-                return 40;
-            case 4:
-                return 50;
-            default:
-                return 70;
+        if ($streak % 5 == 0) {
+            return 50;
+        }
+        else{
+            return 10;
         }
     }
 

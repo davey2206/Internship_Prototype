@@ -62,26 +62,15 @@
     border: solid gold;
 }
 
-.streak-day-box.checked {
-    background-color: #f5c542;
-}
-
-.checkmark {
+.checkmark_streak {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    font-size: 16px;
-    color: green;
-}
-
-.reward-icon {
-    width: 32px;
-    margin-top: 4px;
+    font-size: 32px;
+    color: rgb(0, 255, 0);
 }
 
 .reward-text {
     color: gold;
-    font-size: 14px;
+    font-size: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
