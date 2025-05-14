@@ -3,25 +3,30 @@ export default {
     <div id="login-streak">
       <div class="login-streak-container">
         <div class="streak-header">
-          <div class="streak-reward">+{{ points_data.points_awarded }} <img :src="pluginDirUrl + '/media/plus_points_coin.webp'" class="coin-icon" /></div>
+          <div class="streak-reward">
+            +{{ points_data.points_awarded }}
+            <img :src="pluginDirUrl + '/media/plus_points_coin.webp'" class="coin-icon" />
+          </div>
           <div class="streak-day">Streak day {{ points_streak }}</div>
         </div>
-
         <div class="streak-grid">
           <div v-for="(day, index) in 10" :key="index" class="streak-day-box">
-            <div class="day-number">{{ index + 1 }}</div>
-            <div v-if="index + 1 > points_streak && (index + 1) % 5 !== 0" class="reward-text">
-              +10 
+            <div class="day-number">{{ dayStart + index }}</div>
+
+            <div v-if="(dayStart + index) <= points_streak" class="reward-text">
+              <h2 class="checkmark_streak">✔</h2>
+            </div>
+            <div v-else-if="(dayStart + index) % 10 === 0" class="reward-text">
+              +100
               <img :src="pluginDirUrl + '/media/plus_points_coin.webp'" class="coin-small" />
             </div>
-            <div v-else-if="(index + 1) % 5 == 0" class="reward-text">
-              +50 
+            <div v-else-if="(dayStart + index) % 5 === 0" class="reward-text">
+              +50
               <img :src="pluginDirUrl + '/media/plus_points_coin.webp'" class="coin-small" />
             </div>
-            <div v-else>
-              <div class="reward-text">
-                <h2 class="checkmark_streak">✔</h2>
-              </div>
+            <div v-else class="reward-text">
+              +10
+              <img :src="pluginDirUrl + '/media/plus_points_coin.webp'" class="coin-small" />
             </div>
           </div>
         </div>
@@ -56,6 +61,10 @@ export default {
     //     return {display: "none"};
     //   }
     // }
+    dayStart() {
+    // Start from the most recent 10-day block
+      return Math.floor((this.points_streak - 1) / 10) * 10 + 1;
+    },
   },
   methods: {
     handleResize() {

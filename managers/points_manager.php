@@ -67,7 +67,10 @@ class Points_Manager
 
     public function getStreakPointsAmount($streak)
     {
-        if ($streak % 5 == 0) {
+        if ($streak % 10 == 0) {
+            return 100;
+        }
+        else if ($streak % 5 == 0) {
             return 50;
         }
         else{
