@@ -1,0 +1,47 @@
+<?php
+
+require_once(dirname(__FILE__, 2) . '/managers/includes_manager.php');
+
+Includes_Manager::Instance()->include_php_file(Include_php_file_type::manager_settings);
+Includes_Manager::Instance()->include_php_file(Include_php_file_type::db_badges);
+
+class Badges_Manager
+{
+    private static $instance = null;
+    private $settings;
+    private $Badges_DB;
+
+    private function __construct()
+    {
+        $this->settings = Settings_Manager::Instance();
+        $this->Badges_DB = new Badges_DB();
+    }
+
+    public static function Instance()
+    {
+        if (self::$instance === null) {
+            self::$instance = new Badges_Manager();
+        }
+        return self::$instance;
+    }
+
+    public function getAllBadges($kukudushi)
+    {
+        return $this->Badges_DB->getBadgeStats($kukudushi);
+    }
+
+    public function updateCoinStat($coins)
+    {
+        //update coin stat when getting new coins
+    }
+
+    public function updateFactStat()
+    {
+        //update fact stat when getting new facts
+    }
+
+    public function updateAnimalStat()
+    {
+        //update animal stat when unlocking new animals
+    }
+}

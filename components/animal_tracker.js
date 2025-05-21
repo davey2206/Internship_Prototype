@@ -240,6 +240,7 @@ export default {
       tutorialIconUrl: kukudushiData.plugin_url + '/media/tutorial_icon.webp',
       activeModalType: null, // 'notification' or 'tutorial'
       modalKey: 0,
+      badges: null,
     };
   },
   errorCaptured(err, vm, info) {
@@ -971,6 +972,8 @@ export default {
       let urlString = `${this.pluginDirUrl}backend/get_dashboard_animals.php`;
       if (urlParams.get('uid')) urlString += `?uid=${urlParams.get('uid')}`;
       if (urlParams.get('id')) urlString += `?id=${urlParams.get('id')}`;
+
+      console.log(urlString);
 
       this.loading = true;
 

@@ -1,6 +1,6 @@
 export default {
   template: `
-    <div id="login-streak">
+    <div id="login-streak" v-show="show" @click="hideStreak" :style="display">
       <div class="login-streak-container">
         <div class="streak-header">
           <div class="streak-reward">
@@ -39,6 +39,7 @@ export default {
   data() {
     return {
       screenWidth: window.innerWidth, // Reactive property for screen width
+      show: true,
     };
   },
   props: {
@@ -56,11 +57,11 @@ export default {
   },
   computed: {
     //dont display if already loged in today
-    // display(){
-    //   if (this.points_data.points_awarded == 0) {
-    //     return {display: "none"};
-    //   }
-    // }
+    display(){
+      if (this.points_data.points_awarded == 0) {
+        this.show = false;
+      }
+    },
     dayStart() {
     // Start from the most recent 10-day block
       return Math.floor((this.points_streak - 1) / 10) * 10 + 1;
@@ -69,6 +70,9 @@ export default {
   methods: {
     handleResize() {
       this.screenWidth = window.innerWidth; // Update screen width
+    },
+     hideStreak() {
+      this.show = false;
     },
   },
   mounted() {

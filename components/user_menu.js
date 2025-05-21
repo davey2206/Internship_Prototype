@@ -1,5 +1,5 @@
 import MyAnimals from './my_animals.js';
-import MyPoints from './my_points.js';
+import MyBadges from './my_badges.js';
 import Donate from './donate.js';
 
 export default {
@@ -22,10 +22,10 @@ export default {
                 </button>
                 <button 
                     class="dashboard-tablinks" 
-                    :class="{ active: activeTab === 'MyPoints' }" 
-                    @click="setActiveTab('MyPoints')"
+                    :class="{ active: activeTab === 'MyBadges' }" 
+                    @click="setActiveTab('MyBadges')"
                 >
-                    My Kuku's
+                    My Badges
                 </button>
                 <button 
                     class="dashboard-tablinks" 
@@ -55,11 +55,14 @@ export default {
                 />
             </div>
             <div 
-                id="MyPoints" 
+                id="MyBadges" 
                 class="dashboard-tab-content" 
-                v-show="activeTab === 'MyPoints'"
+                v-show="activeTab === 'MyBadges'"
             >
-                <MyPoints :kukudushi="kukudushi" :pluginDirUrl="pluginDirUrl" />
+                <MyBadges 
+                  :pluginDirUrl="pluginDirUrl"
+                  :kukudushi="kukudushi"
+                />
             </div>
             <div 
                 id="Donate" 
@@ -81,7 +84,7 @@ export default {
   `,
   components: {
     MyAnimals,
-    MyPoints,
+    MyBadges,
     Donate,
   },
   data() {
