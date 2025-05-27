@@ -1,6 +1,7 @@
 <?php
 
 require_once(dirname(__FILE__, 2) . '/managers/includes_manager.php');
+//require_once(dirname(__FILE__, 2) . '/db/badges.php');
 
 Includes_Manager::Instance()->include_php_file(Include_php_file_type::manager_settings);
 Includes_Manager::Instance()->include_php_file(Include_php_file_type::db_badges);

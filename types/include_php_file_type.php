@@ -35,6 +35,7 @@ abstract class Include_php_file_type
     const db_payment = 209;
     const db_points = 210;
     const db_scan = 211;
+    const db_badges = 212;
 
     /* Manager types */ 
 
@@ -52,6 +53,7 @@ abstract class Include_php_file_type
     const manager_scan = 312;
     const manager_user = 313;
     const manager_settings = 314;
+    const manager_badges = 315;
 
     /* Scraping types */
 

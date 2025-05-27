@@ -135,6 +135,10 @@ class Includes_Manager
                 require_once(dirname(__FILE__, 2) . "/db/scan.php");
                 $this->included_php_files_list[] = Include_php_file_type::db_scan;
                 break;
+            case Include_php_file_type::db_badges :
+                require_once(dirname(__FILE__, 2) . "/db/badges.php");
+                $this->included_php_files_list[] = Include_php_file_type::db_badges;
+                break;
 
             /* Manager types */ 
 
@@ -185,6 +189,10 @@ class Includes_Manager
             case Include_php_file_type::manager_settings :
                 require_once(dirname(__FILE__, 2) . "/managers/settings_manager.php");
                 $this->included_php_files_list[] = Include_php_file_type::manager_settings;
+                break;
+            case Include_php_file_type::manager_badges :
+                require_once(dirname(__FILE__, 2) . "/managers/badges_manager.php");
+                $this->included_php_files_list[] = Include_php_file_type::manager_badges;
                 break;
 
                 /* Scraping types */

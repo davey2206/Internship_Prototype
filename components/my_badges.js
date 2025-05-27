@@ -13,8 +13,11 @@ export default {
               <div class="list-item-badges-image-container">
                 <img class="badges_image" :src="pluginDirUrl + '/media/plus_points_coin.webp'">
               </div>
-              <div class="badges-track-focus-container">
-                0/{{ badgesType.BadgeRanks[index] }}
+              <div class="badges-track-focus-container" v-if="badgesType.Collected >= badgesType.BadgeRanks[index]">
+                {{ badgesType.BadgeRanks[index] }}/{{ badgesType.BadgeRanks[index] }}
+              </div>
+              <div class="badges-track-focus-container" v-else">
+                {{ badgesType.Collected }}/{{ badgesType.BadgeRanks[index] }}
               </div>
             </div>
           </transition-group>
