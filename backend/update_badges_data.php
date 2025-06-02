@@ -27,6 +27,14 @@ if ($kukudushi && $kukudushi instanceof Kukudushi) {
     $kukudushi->exists = true; // Example of setting a custom property
 }
 
+$coins = isset($_GET['coins']) ? $_GET['coins'] : 0;
+$facts = isset($_GET['facts']) ? $_GET['facts'] : 0;
+$animals = isset($_GET['animals']) ? $_GET['animals'] : 0;
+
+$badges_manager->updateCoinStat($kukudushi->id, $coins);
+$badges_manager->updateFactStat($kukudushi->id, $facts);
+$badges_manager->updateAnimalStat($kukudushi->id, $animals);
+
 $badge_data = $badges_manager->getAllBadges($kukudushi->id);
 
 $CoinBadgeRanks = array(1000, 2000, 5000, 10000, 15000);

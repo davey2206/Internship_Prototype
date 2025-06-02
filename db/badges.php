@@ -45,16 +45,46 @@ class Badges_DB
         }
     }
 
-    public function updateBadgePoints() {
+    public function updateBadgePoints($kukudushi_id, $amount) {
+        $sql = "SELECT coins FROM wp_kukudushi_badge_stats WHERE kukudushi_id = %s";
+
+        $result = DataBase::select($sql, [$kukudushi_id]);
+
+        $amount = $amount + $result[0]->coins;
         
+        DataBase::update(
+            'wp_kukudushi_badge_stats', 
+            ['coins' => $amount],
+            ['kukudushi_id' => $kukudushi_id]
+        );
     }
 
-    public function updateBadgeAnimals() {
+    public function updateBadgeAnimals($kukudushi_id, $amount) {
+        $sql = "SELECT animals FROM wp_kukudushi_badge_stats WHERE kukudushi_id = %s";
+
+        $result = DataBase::select($sql, [$kukudushi_id]);
+
+        $amount = $amount + $result[0]->animals;
         
+        DataBase::update(
+            'wp_kukudushi_badge_stats', 
+            ['animals' => $amount],
+            ['kukudushi_id' => $kukudushi_id]
+        );
     }
 
-    public function updateBadgeFacts() {
+    public function updateBadgeFacts($kukudushi_id, $amount) {
+        $sql = "SELECT facts FROM wp_kukudushi_badge_stats WHERE kukudushi_id = %s";
+
+        $result = DataBase::select($sql, [$kukudushi_id]);
+
+        $amount = $amount + $result[0]->facts;
         
+        DataBase::update(
+            'wp_kukudushi_badge_stats', 
+            ['facts' => $amount],
+            ['kukudushi_id' => $kukudushi_id]
+        );
     }
 }
 ?>

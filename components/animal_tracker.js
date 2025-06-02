@@ -100,7 +100,8 @@ export default {
       
       <!-- Animal Select Panel -->
       <div id="animal-select-panel" v-show="animalManagerMenuVisible">
-        <userMenuComponent 
+        <userMenuComponent
+          :badges="badges" 
           :animals="animals"
           :selectedAnimalIds="selectedAnimalIds"
           :loading="loading"
@@ -240,7 +241,7 @@ export default {
       tutorialIconUrl: kukudushiData.plugin_url + '/media/tutorial_icon.webp',
       activeModalType: null, // 'notification' or 'tutorial'
       modalKey: 0,
-      badges: null,
+      badges: [],
     };
   },
   errorCaptured(err, vm, info) {
@@ -877,6 +878,39 @@ export default {
       this.selectedEntity = null;
       this.viewer.selectedEntity = null;
     },
+    fetchBadgesData() {
+      const urlParams = new URLSearchParams(window.location.search);
+      let urlString = `${this.pluginDirUrl}backend/get_badges_data.php?`;
+      if (urlParams.get('uid')) urlString += `&uid=${urlParams.get('uid')}`;
+      if (urlParams.get('id')) urlString += `&id=${urlParams.get('id')}`;
+
+      fetch(urlString)
+        .then((response) => response.json())
+        .then((data) => {
+          this.badges = data.Badges;
+        })
+        .catch((error) => {
+          console.error('Error fetching points: ', error);
+        });
+    },
+    updateBadgeStats(coins = null, facts = null, animals = null){
+      const urlParams = new URLSearchParams(window.location.search);
+      let urlString = `${this.pluginDirUrl}backend/update_badges_data.php?`;
+      if (urlParams.get('uid')) urlString += `&uid=${urlParams.get('uid')}`;
+      if (urlParams.get('id')) urlString += `&id=${urlParams.get('id')}`;
+      if(coins !== null) urlString += `&coins=${coins}`;
+      if(facts !== null) urlString += `&facts=${facts}`;;
+      if(animals !== null) urlString += `&animals=${animals}`;;
+
+      fetch(urlString)
+        .then((response) => response.json())
+        .then((data) => {
+          this.badges = data.Badges;
+        })
+        .catch((error) => {
+          console.error('Error fetching points: ', error);
+        });
+    },
     updateBuyingAnimal(animalId) {
       this.buyingAnimalId = animalId;
     },
@@ -953,6 +987,7 @@ export default {
             // Show message
             //alert(message);
             this.setAnimalPurchaseStatus('success'); // Set the status to success
+            this.updateBadgeStats(null,null,1);
           } else {
             // Error, show error message
             //alert(message);
@@ -993,6 +1028,8 @@ export default {
           this.points_data = data.points_data;
           this.points_streak = data.points_streak;
           this.notificationData = data.notifications_data;
+
+          this.updateBadgeStats(this.points_data.points_awarded,null,null);
 
           // Set activeModalType if we have notifications
           if (this.notificationData && this.notificationData.length > 0) {
@@ -1385,6 +1422,8 @@ export default {
       this.fetchAnimals();
 
       this.centerGlobe();
+
+      this.fetchBadgesData();
     },
   },
   computed: {

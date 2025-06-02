@@ -26,23 +26,23 @@ class Badges_Manager
         return self::$instance;
     }
 
-    public function getAllBadges($kukudushi)
+    public function getAllBadges($kukudushi_id)
     {
-        return $this->Badges_DB->getBadgeStats($kukudushi);
+        return $this->Badges_DB->getBadgeStats($kukudushi_id);
     }
 
-    public function updateCoinStat($coins)
+    public function updateCoinStat($kukudushi_id, $amount)
     {
-        //update coin stat when getting new coins
+        $this->Badges_DB->updateBadgePoints($kukudushi_id, $amount);
     }
 
-    public function updateFactStat()
+    public function updateFactStat($kukudushi_id, $amount)
     {
-        //update fact stat when getting new facts
+        $this->Badges_DB->updateBadgeAnimals($kukudushi_id, $amount);
     }
 
-    public function updateAnimalStat()
+    public function updateAnimalStat($kukudushi_id, $amount)
     {
-        //update animal stat when unlocking new animals
+        $this->Badges_DB->updateBadgeFacts($kukudushi_id, $amount);
     }
 }

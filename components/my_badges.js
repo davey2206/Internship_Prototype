@@ -26,42 +26,15 @@ export default {
     </div>
   </div>
 `,
-  data(){
-    return{
-      badges: [],
-    }
-  },
   props: {
     kukudushi: Object,
     pluginDirUrl: String,
+    badges: [],
   },
   computed: {
 
   },
   methods: {
-    fetchBadgesData() {
-      const urlParams = new URLSearchParams(window.location.search);
-      let urlString = `${this.pluginDirUrl}backend/get_badges_data.php`;
-      urlString += `?uid=${this.kukudushi.id}`;
-
-      fetch(urlString)
-        .then((response) => response.json())
-        .then((data) => {
-          this.badges = data.Badges;
-        })
-        .catch((error) => {
-          console.error('Error fetching points: ', error);
-        });
-    },
-  },
-  watch: {
-    kukudushi: {
-      handler(newValue) {
-        if (newValue && newValue.id) {
-          this.fetchBadgesData();
-        }
-      },
-      immediate: true,
-    },
+    
   },
 };

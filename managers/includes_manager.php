@@ -96,6 +96,10 @@ class Includes_Manager
                 require_once(dirname(__FILE__, 2) . "/types/geolocation.php");
                 $this->included_php_files_list[] = Include_php_file_type::obj_type_geolocation;
                 break;
+            case Include_php_file_type::obj_type_caption :
+                require_once(dirname(__FILE__, 2) . "/types/caption.php");
+                $this->included_php_files_list[] = Include_php_file_type::obj_type_caption;
+                break;
 
             /* Db types */ 
 
@@ -138,6 +142,10 @@ class Includes_Manager
             case Include_php_file_type::db_badges :
                 require_once(dirname(__FILE__, 2) . "/db/badges.php");
                 $this->included_php_files_list[] = Include_php_file_type::db_badges;
+                break;
+            case Include_php_file_type::db_caption :
+                require_once(dirname(__FILE__, 2) . "/db/caption.php");
+                $this->included_php_files_list[] = Include_php_file_type::db_caption;
                 break;
 
             /* Manager types */ 
@@ -193,6 +201,10 @@ class Includes_Manager
             case Include_php_file_type::manager_badges :
                 require_once(dirname(__FILE__, 2) . "/managers/badges_manager.php");
                 $this->included_php_files_list[] = Include_php_file_type::manager_badges;
+                break;
+            case Include_php_file_type::manager_caption :
+                require_once(dirname(__FILE__, 2) . "/managers/caption_manager.php");
+                $this->included_php_files_list[] = Include_php_file_type::caption_manager;
                 break;
 
                 /* Scraping types */

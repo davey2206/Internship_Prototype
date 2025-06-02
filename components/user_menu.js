@@ -62,6 +62,7 @@ export default {
                 <MyBadges 
                   :pluginDirUrl="pluginDirUrl"
                   :kukudushi="kukudushi"
+                  :badges="badges"
                 />
             </div>
             <div 
@@ -102,6 +103,7 @@ export default {
     kukudushi: Object,
     buyingAnimalId: [Number, String, null],
     animal_purchase_status: String,
+    badges: [],
   },
   computed: {
     // Compute the mask percentage dynamically
