@@ -11,7 +11,11 @@ export default {
           <transition-group name="fade-shrink" tag="div" class="horizontal-badges-list">
             <div v-for="(badge, index) in 5" :key="index" class="badges-list-item">
               <div class="list-item-badges-image-container">
-                <img class="badges_image" :src="pluginDirUrl + '/media/plus_points_coin.webp'">
+                <img
+                  class="badges_image"
+                  :class="{ 'grayed-out': index >= badgesType.Unlocked }"
+                  :src="pluginDirUrl + '/media/badges/' + getBadgeImage(index)"
+                >
               </div>
               <div class="badges-track-focus-container" v-if="badgesType.Collected >= badgesType.BadgeRanks[index]">
                 {{ badgesType.BadgeRanks[index] }}/{{ badgesType.BadgeRanks[index] }}
@@ -35,6 +39,9 @@ export default {
 
   },
   methods: {
-    
+    getBadgeImage(index) {
+      const names = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond'];
+      return names[index] + '.webp';
+    }
   },
 };
