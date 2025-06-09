@@ -1,4 +1,5 @@
 import WarmingUpGame from './minigames/warming_up_game.js';
+import DivingGame from './minigames/diving_game.js';
 
 export default {
   props: [
@@ -300,14 +301,18 @@ export default {
       </div>
     </div>
   </div>
-  <WarmingUpGame ref="warmingUpGame" :pluginDirUrl="pluginDirUrl" v-show="MiniGame" @close="MiniGame = false"/>
+  <WarmingUpGame ref="warmingUpGame" :pluginDirUrl="pluginDirUrl" v-show="WarmingUpMiniGame" @close="MiniGame = false, WarmingUpMiniGame = false"/>
+  <DivingGame ref="divingGame" :pluginDirUrl="pluginDirUrl" v-show="DivingMiniGame" @close="MiniGame = false, DivingMiniGame = false"/>
   `,
   components: {
     WarmingUpGame,
+    DivingGame,
   },
   data() {
     return {
       MiniGame: false,
+      WarmingUpMiniGame: false,
+      DivingMiniGame: false,
     };
   },
   computed: {
@@ -541,11 +546,24 @@ export default {
     showMiniGame(){
       this.MiniGame = true;
 
-      this.$nextTick(() => {
-        if (this.$refs.warmingUpGame && this.$refs.warmingUpGame.startGame) {
-          this.$refs.warmingUpGame.startGame(); // Call the game start method
-        }
-      });
+      switch (Math.floor(Math.random() * 2)) {
+        case 0:
+          this.WarmingUpMiniGame = true;
+          this.$nextTick(() => {
+            if (this.$refs.warmingUpGame && this.$refs.warmingUpGame.startGame) {
+              this.$refs.warmingUpGame.startGame();
+            }
+          });
+          break;
+        case 1:
+          this.DivingMiniGame = true;
+          this.$nextTick(() => {
+            if (this.$refs.divingGame && this.$refs.divingGame.startGame) {
+              this.$refs.divingGame.startGame();
+            }
+          });
+          break;
+      }
     },
     logThis(entity) {
       console.log(entity);
