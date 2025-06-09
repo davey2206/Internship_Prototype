@@ -1,0 +1,38 @@
+.DivingGame{
+    height: 100vh;
+    width: 100vw;
+    background-image: url(https://thumbs.dreamstime.com/b/ocean-sea-underwater-background-empty-bottom-rocks-fish-silhouettes-air-bubbles-floating-sunlight-beams-falling-342954578.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    z-index: 10001;
+    position: relative;
+}
+.DivingSeal{
+    transition: linear;
+    transition-duration: 0.5s;
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: white;
+}
+.DivingbuttonHolder{
+    position: absolute;
+}
+.DivingButton{
+    width: 75px;
+    height: 75px;
+}
+#DivingTime{
+    padding-top: 50px;
+    position: absolute;
+    font-size: 25px;
+}
+
+.DivingCloseButton {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  padding: 12px 24px;
+}
