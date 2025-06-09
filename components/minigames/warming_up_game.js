@@ -56,6 +56,7 @@ export default {
     scoreDisplay() {
       if (this.score >= 500){
         this.showCloseButton = true;
+        this.score = 10000;
         return "you win";
       } 
       if (this.score <= 0)
@@ -134,7 +135,7 @@ export default {
       this.trashes.push(trash);
     },
     updateTrash(trash, deltaTime) {
-      const speed = 100; // pixels per second
+      const speed = 200; // pixels per second
       trash.y += speed * deltaTime;
 
       if (trash.y > this.windowHeight + 50) {
@@ -168,8 +169,8 @@ export default {
         this.sunTimer = 0;
       }
 
-      // Spawn trash every 5 seconds
-      if (this.trashTimer >= 5) {
+      // Spawn trash every 2.5 seconds
+      if (this.trashTimer >= 2.5) {
         this.spawnTrash();
         this.trashTimer = 0;
       }
