@@ -99,7 +99,8 @@ function enqueue_kukudushi_vue_widget() {
             'login-streak-css' => 'css/login-streak.css',
             'my-badges-css' => 'css/my-badges.css',
             'my-animals-css' => 'css/my-animals.css',
-            'cesium-custom-infobox' => 'css/cesium-custom-infobox.css'
+            'cesium-custom-infobox' => 'css/cesium-custom-infobox.css',
+            'warming-up-css' => 'css/minigames/warming-up.css'
         );
         foreach ($styles as $handle => $path) {
             wp_enqueue_style($handle, plugin_dir_url(__FILE__) . $path, array(), KUKUDUSHI_ENGINE_VERSION);

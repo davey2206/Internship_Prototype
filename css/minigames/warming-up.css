@@ -1,0 +1,56 @@
+.WarmingUpGame{
+    height: 100vh;
+    width: 100vw;
+    background-image: url(https://t4.ftcdn.net/jpg/02/39/60/81/360_F_239608136_4qtLPCPhCCzNaSoPo2hiEfMFA1fBXa2R.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    z-index: 10001;
+    position: relative;
+}
+.WarmingUpTurtle{
+    transition: linear;
+    transition-duration: 0.5s;
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: white;
+}
+.WarmingUpSun{
+    width: 25vw;
+    height: 100vh;
+    background-position: 55%;
+    position: absolute;
+    background-image: url(https://png.pngtree.com/png-clipart/20230417/original/pngtree-white-sun-beam-sunrays-sunshine-light-effect-png-image_9059940.png);
+    background-size: cover;
+
+}
+.WarmingUpTrash{
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: black;
+    transition: linear;
+    transition-duration: 0.2s;
+}
+.WarmingUpButtonHolder{
+    z-index: 1;
+    position: absolute;
+}
+.WarmingUpButton{
+    width: 75px;
+    height: 75px;
+}
+#WarmingUpScore{
+    padding-top: 50px;
+    position: absolute;
+    font-size: 25px;
+}
+
+.WarmingUpCloseButton {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  padding: 12px 24px;
+}

@@ -1,3 +1,5 @@
+import WarmingUpGame from './minigames/warming_up_game.js';
+
 export default {
   props: [
     'pluginDirUrl',
@@ -11,6 +13,7 @@ export default {
   id="custom-infobox-container" 
   :class="{ 'custom-infoBox': true, 'custom-infoBox-visible': selectedEntity }" 
   :style="{ height: (animal.is_owned && selectedEntity?.isFirst) ? '80vh' : '' }"
+  v-show="!MiniGame"
   >
     <div class="custom-infobox-content">
       <div v-if="selectedEntity.isFirst" class="animal-info">
@@ -116,6 +119,11 @@ export default {
                       <path d="M118.653 74.0647Q119.907 73.91 121.171 73.9074C124.29 73.8855 127.304 74.9982 129.532 77.2056Q129.942 77.6076 130.31 78.0483Q130.678 78.4891 131 78.9642Q131.323 79.4394 131.596 79.9442Q131.87 80.449 132.092 80.9785Q132.314 81.508 132.482 82.057Q132.651 82.606 132.764 83.1689Q132.877 83.7319 132.933 84.3033Q132.99 84.8747 132.989 85.4489C132.991 87.2595 132.56 89.5525 131.595 91.104C129.211 94.9374 123.389 99.897 120.038 103.237L99.8098 123.525C96.9301 126.416 94.1938 128.87 89.8599 128.854C83.2289 128.83 78.5903 122.443 74.327 118.167C70.4683 114.251 63.0386 108.359 61.6406 103.101Q61.4971 102.553 61.4074 101.994Q61.3178 101.436 61.2829 100.871Q61.248 100.306 61.2682 99.7398Q61.2884 99.1741 61.3635 98.613Q61.4385 98.0519 61.5678 97.5007Q61.697 96.9496 61.8792 96.4136Q62.0614 95.8777 62.2948 95.3619Q62.5282 94.8462 62.8106 94.3556C64.3941 91.6263 67.015 89.5 70.0853 88.7046C77.0261 86.9064 81.4103 91.975 85.7142 96.4844C86.697 97.5141 87.7303 98.792 88.9729 99.5012C89.3511 99.717 89.7896 99.8676 90.2361 99.7804C91.061 99.6193 110.749 78.7244 114.449 76.054C115.799 75.08 117.058 74.5202 118.653 74.0647ZM120.276 81.9754L120.198 82.0196C117.137 83.784 113.63 88.061 111.096 90.6139L97.8836 103.912C95.9919 105.811 93.927 108.352 91.5886 109.671C90.7796 110.127 89.9854 110.24 89.078 110.018C84.0069 108.775 76.0027 94.2718 71.3434 96.9403Q70.9983 97.1412 70.7004 97.4071Q70.4025 97.6731 70.1639 97.9933Q69.9253 98.3135 69.7556 98.675Q69.586 99.0365 69.4922 99.4247C69.2672 100.352 69.3932 101.369 69.9179 102.176C70.9973 103.836 73.1475 105.558 74.5752 106.985C77.8103 110.101 84.315 117.481 87.4803 119.613C88.2177 120.11 88.9822 120.425 89.8807 120.422C90.6769 120.419 91.3747 120.224 92.0168 119.749C94.8225 117.676 97.4181 114.531 99.8946 112.046C104.549 107.375 109.319 102.779 113.885 98.024C116.651 95.1424 125.109 88.3638 124.984 84.5074C124.965 83.9361 124.778 83.4584 124.347 83.0732C123.322 82.1566 121.59 81.9072 120.276 81.9754Z"/>
                     </svg>
                     Fun Facts
+                  </button>
+                </div>
+                <div class="miniGameTab">
+                  <button class="tablinks tabButton PlayGame" @click="showMiniGame()">
+                      Play Game
                   </button>
                 </div>
                 <div class="tabcontentContainer">
@@ -292,7 +300,16 @@ export default {
       </div>
     </div>
   </div>
+  <WarmingUpGame ref="warmingUpGame" :pluginDirUrl="pluginDirUrl" v-show="MiniGame" @close="MiniGame = false"/>
   `,
+  components: {
+    WarmingUpGame,
+  },
+  data() {
+    return {
+      MiniGame: false,
+    };
+  },
   computed: {
     hasEnoughPoints() {
       // Assuming animal costs 1000 points (based on the button text)
@@ -521,6 +538,15 @@ export default {
     },
   },
   methods: {
+    showMiniGame(){
+      this.MiniGame = true;
+
+      this.$nextTick(() => {
+        if (this.$refs.warmingUpGame && this.$refs.warmingUpGame.startGame) {
+          this.$refs.warmingUpGame.startGame(); // Call the game start method
+        }
+      });
+    },
     logThis(entity) {
       console.log(entity);
       return entity;
